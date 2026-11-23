@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37301.10 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleWaterFoam", "SimpleWaterFoam\SimpleWaterFoam.csproj", "{47B409FB-F7FA-43FD-9308-AFD0363E3A09}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{47B409FB-F7FA-43FD-9308-AFD0363E3A09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47B409FB-F7FA-43FD-9308-AFD0363E3A09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47B409FB-F7FA-43FD-9308-AFD0363E3A09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47B409FB-F7FA-43FD-9308-AFD0363E3A09}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8C581B75-47EA-497A-A1F4-CD94C1C57F7B}
+	EndGlobalSection
+EndGlobal
