@@ -23,7 +23,7 @@ namespace SimpleWaterFoam
         private GameObject host;
         public void OnLoad(UpdateSystem updateSystem)
         {
-            Logger.Info("SimpleWaterFoam 1.2.0: native water controls");
+            Logger.Info("SimpleWaterFoam 1.2.1: native water controls");
             try
             {
                 settings = new FoamSettings(this);
@@ -57,7 +57,8 @@ namespace SimpleWaterFoam
         internal Func<FoamSettings, bool> Enabled;
         internal Func<FoamSettings, object, object> Value;
         internal bool Failed;
-        internal bool Supported { get { return Field != null && !Failed; } }
+        internal string SuspendedReason;
+        internal bool Supported { get { return Field != null && !Failed && SuspendedReason == null; } }
     }
 
     internal sealed class WaterSlot
@@ -117,6 +118,8 @@ namespace SimpleWaterFoam
         private bool running;
         private int lastRevision = -1;
         private bool emptyReported;
+        private int pendingObservations;
+        private float nextObservation;
 
         internal bool Supports(string key)
         {
@@ -130,7 +133,7 @@ namespace SimpleWaterFoam
             {
                 int count = 0;
                 foreach (var b in bindings) if (b.Supported) count++;
-                return "v1.2.0 | API " + count + "/" + bindings.Count + " | surfaces " + surfaces.Count + " | " + (running ? "ready" : "stopped");
+                return "v1.2.1 | API " + count + "/" + bindings.Count + " | surfaces " + surfaces.Count + " | " + (running ? "ready" : "stopped");
             }
         }
         internal void Initialize(FoamSettings options)
@@ -144,7 +147,7 @@ namespace SimpleWaterFoam
             if (surfaceType != null && !typeof(Behaviour).IsAssignableFrom(surfaceType)) surfaceType = null;
             ConfigureBindings();
             foreach (var b in bindings)
-                Mod.Logger.Info("API " + b.Key + ": " + (b.Supported ? b.Field.Name : "UNAVAILABLE"));
+                Mod.Logger.Info("API " + b.Key + ": " + Describe(b));
             if (surfaceType == null)
             {
                 Mod.Logger.Warn("HDRP WaterSurface unavailable. Controls disabled; no changes made.");
@@ -166,6 +169,19 @@ namespace SimpleWaterFoam
                     if (f != null && f.FieldType == type && !f.IsInitOnly) { field = f; break; }
                 }
             bindings.Add(new WaterBinding { Key = key, Field = field, Enabled = active, Value = value });
+        }
+        private void AddSuspended(string key, Type type, string reason, params string[] names)
+        {
+            // Keep metadata for read-only diagnosis; never create a writable slot.
+            Add(key, type, s => false, (s, o) => o, names);
+            bindings[bindings.Count - 1].SuspendedReason = reason;
+        }
+        private static string Describe(WaterBinding binding)
+        {
+            string result = binding.Field == null ? "UNAVAILABLE" : binding.Field.Name;
+            if (binding.SuspendedReason != null) result += " [SUSPENDED: " + binding.SuspendedReason + "]";
+            if (binding.Failed) result += " [FAILED]";
+            return result;
         }
         private static float P(int value) { return value / 100f; }
         private static float Relative(object original, int percent)
@@ -189,9 +205,9 @@ namespace SimpleWaterFoam
             Add("RefractionColor", typeof(Color), s => s.RefractionColorEnabled, (s, o) => new Color(P(s.RefractionR), P(s.RefractionG), P(s.RefractionB), 1f), "refractionColor");
             Add("ScatteringColor", typeof(Color), s => s.ScatteringColorEnabled, (s, o) => new Color(P(s.ScatteringR), P(s.ScatteringG), P(s.ScatteringB), 1f), "scatteringColor");
             Add("Ambient", typeof(float), s => s.LightingEnabled, (s, o) => P(s.Ambient), "ambientScattering");
-            Add("Height", typeof(float), s => s.LightingEnabled, (s, o) => P(s.Height), "heightScattering");
-            Add("Displacement", typeof(float), s => s.LightingEnabled, (s, o) => P(s.Displacement), "displacementScattering");
-            Add("Tip", typeof(float), s => s.LightingEnabled, (s, o) => P(s.Tip), "directLightTipScattering");
+            AddSuspended("Height", typeof(float), "No visible effect reported in CS2 1.6.4f1; render path unverified", "heightScattering");
+            AddSuspended("Displacement", typeof(float), "No visible effect reported in CS2 1.6.4f1; render path unverified", "displacementScattering");
+            AddSuspended("Tip", typeof(float), "No visible effect reported in CS2 1.6.4f1; render path unverified", "directLightTipScattering");
             Add("Body", typeof(float), s => s.LightingEnabled, (s, o) => P(s.Body), "directLightBodyScattering");
             Add("NearSmoothness", typeof(float), s => s.ReflectionEnabled, (s, o) => P(s.NearSmoothness), "startSmoothness");
             Add("FarSmoothness", typeof(float), s => s.ReflectionEnabled, (s, o) => P(s.FarSmoothness), "endSmoothness");
@@ -199,8 +215,9 @@ namespace SimpleWaterFoam
             Add("SmoothFadeDistance", typeof(float), s => s.ReflectionEnabled, (s, o) => s.SmoothFadeDistance, "smoothnessFadeDistance");
             Add("LargeWaves", typeof(float), s => s.WavesEnabled, (s, o) => Relative(o, s.LargeWaves), "largeBand0Multiplier");
             Add("MediumWaves", typeof(float), s => s.WavesEnabled, (s, o) => Relative(o, s.MediumWaves), "largeBand1Multiplier");
-            Add("Ripples", typeof(float), s => s.WavesEnabled, (s, o) => Relative(o, s.Ripples), "ripplesWindSpeed");
-            Add("AnimationSpeed", typeof(float), s => s.WavesEnabled, (s, o) => Relative(o, s.AnimationSpeed), "timeMultiplier");
+            Add("Ripples", typeof(float), s => s.WavesEnabled && s.RippleOverrideEnabled, (s, o) => Relative(o, s.Ripples), "ripplesWindSpeed");
+            // Do not own timeMultiplier: a snapshot taken while paused can pin animation to zero.
+            AddSuspended("AnimationSpeed", typeof(float), "Engine-owned clock; snapshot override removed in 1.2.1", "timeMultiplier");
             Add("CausticsSwitch", typeof(bool), s => s.CausticsOverride, (s, o) => s.CausticsOn, "caustics");
             Add("CausticsIntensity", typeof(float), s => s.CausticsOverride && s.CausticsOn, (s, o) => P(s.CausticsIntensity), "causticsIntensity");
             Add("CausticsBlend", typeof(float), s => s.CausticsOverride && s.CausticsOn, (s, o) => s.CausticsBlend, "causticsPlaneBlendDistance");
@@ -256,6 +273,12 @@ namespace SimpleWaterFoam
                     }
                 }
                 foreach (var item in removed) surfaces.Remove(item);
+                if (pendingObservations > 0 && Time.realtimeSinceStartup >= nextObservation)
+                {
+                    LogObservations("DELAYED");
+                    pendingObservations--;
+                    nextObservation = Time.realtimeSinceStartup + 10f;
+                }
             }
             catch (Exception e) { Mod.Logger.Error("Controller stopped: " + e); Restore(); }
         }
@@ -296,7 +319,11 @@ namespace SimpleWaterFoam
         internal void Dump()
         {
             Mod.Logger.Info("DIAGNOSTICS " + Status + ". Exposed field does not prove shader support.");
-            foreach (var b in bindings) Mod.Logger.Info(b.Key + ": " + (b.Supported ? b.Field.Name : "UNAVAILABLE"));
+            LogObservations("NOW");
+            pendingObservations = running ? 2 : 0;
+            nextObservation = Time.realtimeSinceStartup + 5f;
+            Mod.Logger.Info("Two read-only samples scheduled in 5 and approximately 15 seconds; return to the city.");
+            foreach (var b in bindings) Mod.Logger.Info(b.Key + ": " + Describe(b));
             foreach (var entry in surfaces)
             {
                 if (entry.Key == null) continue;
@@ -313,6 +340,24 @@ namespace SimpleWaterFoam
                 }
             }
         }
+        private void LogObservations(string phase)
+        {
+            foreach (var entry in surfaces)
+            {
+                if (entry.Key == null) continue;
+                foreach (var binding in bindings)
+                {
+                    if (binding.SuspendedReason == null || binding.Field == null) continue;
+                    try
+                    {
+                        Mod.Logger.Info("OBSERVE " + phase + " t=" + Time.realtimeSinceStartup +
+                            " surface=" + entry.Key.name + " field=" + binding.Field.Name +
+                            " value=" + binding.Field.GetValue(entry.Key) + " [read-only]");
+                    }
+                    catch (Exception e) { Mod.Logger.Warn("Observation: " + e.Message); }
+                }
+            }
+        }
         private static void RestoreSlots(Object surface, List<WaterSlot> slots)
         {
             if (surface == null) return;
@@ -322,6 +367,7 @@ namespace SimpleWaterFoam
         public void Restore()
         {
             running = false;
+            pendingObservations = 0;
             foreach (var entry in surfaces) RestoreSlots(entry.Key, entry.Value);
             surfaces.Clear();
         }
@@ -488,12 +534,17 @@ namespace SimpleWaterFoam
         [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledMediumWaves))]
         public int MediumWaves { get { return _MediumWaves; } set { var v = Limit(value, 0, 150); if (_MediumWaves != v) { _MediumWaves = v; Revision++; } } }
         public bool DisabledMediumWaves() { return !(EnableEffect && WavesEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("MediumWaves")); }
+        private bool _RippleOverrideEnabled;
+        [SettingsUISection("Waves", "Motion")]
+        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRippleOverrideEnabled))]
+        public bool RippleOverrideEnabled { get { return _RippleOverrideEnabled; } set { var v = value; if (_RippleOverrideEnabled != v) { _RippleOverrideEnabled = v; Revision++; } } }
+        public bool DisabledRippleOverrideEnabled() { return !(EnableEffect && WavesEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("Ripples")); }
         private int _Ripples;
         [SettingsUISection("Waves", "Motion")]
         [SettingsUISlider(min = 0.0f, max = 150.0f, step = 5.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
         [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRipples))]
         public int Ripples { get { return _Ripples; } set { var v = Limit(value, 0, 150); if (_Ripples != v) { _Ripples = v; Revision++; } } }
-        public bool DisabledRipples() { return !(EnableEffect && WavesEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("Ripples")); }
+        public bool DisabledRipples() { return !(EnableEffect && WavesEnabled && RippleOverrideEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("Ripples")); }
         private int _AnimationSpeed;
         [SettingsUISection("Waves", "Motion")]
         [SettingsUISlider(min = 25.0f, max = 200.0f, step = 5.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
@@ -581,7 +632,7 @@ namespace SimpleWaterFoam
         {
             set
             {
-                SetDefaults(); EnableEffect = true; OpticsEnabled = true; RefractionColorEnabled = true; ScatteringColorEnabled = true; ReflectionEnabled = true; WavesEnabled = true; FoamLookEnabled = true; Amount = 30; WindIndependence = 30; LargeWaves = 90; MediumWaves = 90; Ripples = 65; ApplyAndSave();
+                SetDefaults(); EnableEffect = true; OpticsEnabled = true; RefractionColorEnabled = true; ScatteringColorEnabled = true; ReflectionEnabled = true; WavesEnabled = true; FoamLookEnabled = true; Amount = 30; WindIndependence = 30; LargeWaves = 90; MediumWaves = 90; ApplyAndSave();
             }
         }
         [SettingsUISection("General", "Presets")]
@@ -599,7 +650,7 @@ namespace SimpleWaterFoam
         {
             set
             {
-                EnableEffect = true; FoamEnabled = OpticsEnabled = RefractionColorEnabled = ScatteringColorEnabled = LightingEnabled = ReflectionEnabled = WavesEnabled = FoamLookEnabled = FoamPersistenceEnabled = CausticsOverride = false; ApplyAndSave();
+                EnableEffect = true; FoamEnabled = OpticsEnabled = RefractionColorEnabled = ScatteringColorEnabled = LightingEnabled = ReflectionEnabled = WavesEnabled = RippleOverrideEnabled = FoamLookEnabled = FoamPersistenceEnabled = CausticsOverride = false; ApplyAndSave();
             }
         }
         [SettingsUISection("General", "Diagnostics")]
@@ -639,6 +690,7 @@ namespace SimpleWaterFoam
             WavesEnabled = false;
             LargeWaves = 100;
             MediumWaves = 100;
+            RippleOverrideEnabled = false;
             Ripples = 100;
             AnimationSpeed = 100;
             FoamEnabled = true;
@@ -711,12 +763,12 @@ namespace SimpleWaterFoam
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.LightingEnabled)),pt?"Controla a contribuição da luz no volume e nas ondas; valores excessivos podem produzir aparência luminosa.":"Override light scattering. See LEIA-ME.md for ranges and behavior."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.Ambient)),pt?"Luz ambiente":"Ambient scattering"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.Ambient)),pt?"Escala de 0–100 para o parâmetro nativo de 0–1. Não é exposição global.":"Ambient scattering. Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
-{settings.GetOptionLabelLocaleID(nameof(FoamSettings.Height)),pt?"Dispersão por altura da onda":"Height scattering"},
-{settings.GetOptionDescLocaleID(nameof(FoamSettings.Height)),pt?"Escala de 0–100 para o parâmetro nativo de 0–1. Não é exposição global.":"Height scattering. Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
-{settings.GetOptionLabelLocaleID(nameof(FoamSettings.Displacement)),pt?"Dispersão por deslocamento":"Displacement scattering"},
-{settings.GetOptionDescLocaleID(nameof(FoamSettings.Displacement)),pt?"Escala de 0–100 para o parâmetro nativo de 0–1. Não é exposição global.":"Displacement scattering. Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
-{settings.GetOptionLabelLocaleID(nameof(FoamSettings.Tip)),pt?"Luz nas cristas":"Wave-tip lighting"},
-{settings.GetOptionDescLocaleID(nameof(FoamSettings.Tip)),pt?"Escala de 0–100 para o parâmetro nativo de 0–1. Não é exposição global.":"Wave-tip lighting. Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.Height)),pt?"Dispersão por altura da onda (suspenso)":"Height scattering (suspended)"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.Height)),pt?"Sem efeito visual observado no CS2 1.6.4f1. Este controle não escreve mais no campo; o valor é mantido apenas para preservar a configuração.":"No visible effect reported in CS2 1.6.4f1. Suspended: this control no longer writes the native field. Its saved value is retained."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.Displacement)),pt?"Dispersão por deslocamento (suspenso)":"Displacement scattering (suspended)"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.Displacement)),pt?"Sem efeito visual observado no CS2 1.6.4f1. Este controle não escreve mais no campo; o valor é mantido apenas para preservar a configuração.":"No visible effect reported in CS2 1.6.4f1. Suspended: this control no longer writes the native field. Its saved value is retained."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.Tip)),pt?"Luz nas cristas (suspenso)":"Wave-tip lighting (suspended)"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.Tip)),pt?"Sem efeito visual observado no CS2 1.6.4f1. Este controle não escreve mais no campo; o valor é mantido apenas para preservar a configuração.":"No visible effect reported in CS2 1.6.4f1. Suspended: this control no longer writes the native field. Its saved value is retained."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.Body)),pt?"Luz no corpo das ondas":"Wave-body lighting"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.Body)),pt?"Escala de 0–100 para o parâmetro nativo de 0–1. Não é exposição global.":"Wave-body lighting. Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.ReflectionEnabled)),pt?"Ajustar resposta aos reflexos":"Override reflection response"},
@@ -729,16 +781,18 @@ namespace SimpleWaterFoam
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.SmoothFadeStart)),pt?"Distância da câmera onde começa a mudança de suavidade.":"Transition start (m). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.SmoothFadeDistance)),pt?"Comprimento da transição (m)":"Transition length (m)"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.SmoothFadeDistance)),pt?"Comprimento da transição, contado a partir de seu início.":"Transition length (m). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
-{settings.GetOptionLabelLocaleID(nameof(FoamSettings.WavesEnabled)),pt?"Ajustar ondas visuais":"Override visual waves"},
-{settings.GetOptionDescLocaleID(nameof(FoamSettings.WavesEnabled)),pt?"Multiplicadores relativos ao valor encontrado ao ativar o grupo. Não altera fontes, vazão ou nível da simulação hidrológica.":"Override visual waves. See LEIA-ME.md for ranges and behavior."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.WavesEnabled)),pt?"Ajustar amplitude das ondas":"Override wave amplitude"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.WavesEnabled)),pt?"Ajusta as bandas grandes e médias. O tempo da animação permanece sob controle do jogo. Ondulações finas têm ativação separada.":"Changes large and medium wave amplitudes only. Leaves the water clock under game control. Ripple wind has a separate opt-in toggle."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.LargeWaves)),pt?"Ondas grandes — multiplicador (%)":"Large waves — multiplier (%)"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.LargeWaves)),pt?"100 mantém o valor capturado ao ativar. A agitação fina multiplica o vento da banda de ripples, não diretamente sua amplitude. Se o valor original for zero, o resultado permanece zero.":"Large waves — multiplier (%). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.MediumWaves)),pt?"Ondas médias — multiplicador (%)":"Medium waves — multiplier (%)"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.MediumWaves)),pt?"100 mantém o valor capturado ao ativar. A agitação fina multiplica o vento da banda de ripples, não diretamente sua amplitude. Se o valor original for zero, o resultado permanece zero.":"Medium waves — multiplier (%). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.RippleOverrideEnabled)),pt?"Ajustar vento das ondulações finas (experimental)":"Override ripple wind (experimental)"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.RippleOverrideEnabled)),pt?"Altera o espectro das ondulações finas. Ative separadamente para avaliar o efeito; começa desligado.":"Optional spectrum change; disabled by default and by presets. Enable separately to check its effect."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.Ripples)),pt?"Agitação fina — multiplicador (%)":"Ripple wind — multiplier (%)"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.Ripples)),pt?"100 mantém o valor capturado ao ativar. A agitação fina multiplica o vento da banda de ripples, não diretamente sua amplitude. Se o valor original for zero, o resultado permanece zero.":"Ripple wind — multiplier (%). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
-{settings.GetOptionLabelLocaleID(nameof(FoamSettings.AnimationSpeed)),pt?"Velocidade da animação (%)":"Animation speed (%)"},
-{settings.GetOptionDescLocaleID(nameof(FoamSettings.AnimationSpeed)),pt?"Multiplica o tempo da água visual. 100 mantém o valor capturado. Não acelera a simulação da cidade.":"Animation speed (%). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.AnimationSpeed)),pt?"Velocidade da animação (%) — suspenso":"Animation speed (%) — suspended"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.AnimationSpeed)),pt?"O tempo da água é controlado pelo jogo. A escrita neste campo foi removida para evitar capturar e reaplicar uma pausa. O valor salvo não é aplicado.":"Water timing stays under game control. This override was removed to avoid capturing and replaying a paused clock. Saved value is not applied."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.FoamEnabled)),pt?"Ajustar espuma":"Override foam"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.FoamEnabled)),pt?"Ativa a espuma nativa. Desativar devolve ao jogo o controle dos parâmetros de espuma.":"Override foam. See LEIA-ME.md for ranges and behavior."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.Amount)),pt?"Quantidade de espuma":"Foam amount"},
@@ -766,13 +820,13 @@ namespace SimpleWaterFoam
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.CausticsProjection)),pt?"Distância de projeção (m)":"Projection distance (m)"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.CausticsProjection)),pt?"Valores maiores podem produzir padrões mais nítidos e também artefatos.":"Projection distance (m). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.BalancedPreset)),pt?"Preset inicial equilibrado":"Balanced starting preset"},
-{settings.GetOptionDescLocaleID(nameof(FoamSettings.BalancedPreset)),pt?"Configuração experimental para comparação: ajusta água, reflexos, ondas e aparência da espuma. Cáusticas e persistência ficam sob controle do jogo.":"Balanced starting preset. See LEIA-ME.md for details."},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.BalancedPreset)),pt?"Configuração experimental: ajusta água, reflexos, amplitudes grandes/médias e aparência da espuma. Tempo da água, ondulações finas, cáusticas e persistência continuam sob controle do jogo.":"Balanced starting preset. See LEIA-ME.md for details."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.FoamOnlyPreset)),pt?"Somente espuma (versão anterior)":"Foam only (previous version)"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.FoamOnlyPreset)),pt?"Restaura os valores iniciais: espuma 40, independência 100, outros grupos desativados.":"Foam only (previous version). See LEIA-ME.md for details."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.NativePreset)),pt?"Usar valores do jogo":"Use game values"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.NativePreset)),pt?"Desativa todos os grupos sem apagar os valores dos sliders. O mod permanece disponível.":"Use game values. See LEIA-ME.md for details."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.WriteDiagnostics)),pt?"Registrar diagnóstico no log":"Write diagnostics to log"},
-{settings.GetOptionDescLocaleID(nameof(FoamSettings.WriteDiagnostics)),pt?"Registra campos detectados, material e valores atuais em Logs/SimpleWaterFoam.log.":"Write diagnostics to log. See LEIA-ME.md for details."},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.WriteDiagnostics)),pt?"Registra campos e material no log. Volte à cidade: duas amostras adicionais, após 5 e cerca de 15 segundos, observam os campos suspensos sem alterá-los.":"Write diagnostics to log. See LEIA-ME.md for details."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.RuntimeStatus)),pt?"Controles detectados":"Detected controls"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.RuntimeStatus)),pt?"Campo detectado não garante efeito visual no material. Grupos novos começam desativados. Reabra as opções se a disponibilidade mudar.":"An exposed field does not guarantee a visible material effect. New groups start disabled. Reopen options if availability changes."}
 };
