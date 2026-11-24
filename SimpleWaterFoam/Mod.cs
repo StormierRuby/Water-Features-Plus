@@ -23,7 +23,7 @@ namespace SimpleWaterFoam
         private GameObject host;
         public void OnLoad(UpdateSystem updateSystem)
         {
-            Logger.Info("SimpleWaterFoam 1.2.1: native water controls");
+            Logger.Info("SimpleWaterFoam 1.3.0: native water controls");
             try
             {
                 settings = new FoamSettings(this);
@@ -56,6 +56,8 @@ namespace SimpleWaterFoam
         internal FieldInfo Field;
         internal Func<FoamSettings, bool> Enabled;
         internal Func<FoamSettings, object, object> Value;
+        internal Func<FoamSettings, object, bool> TargetEnabled;
+        internal Func<FoamSettings, object, object, object> TargetValue;
         internal bool Failed;
         internal string SuspendedReason;
         internal bool Supported { get { return Field != null && !Failed && SuspendedReason == null; } }
@@ -71,7 +73,7 @@ namespace SimpleWaterFoam
 
         internal void Apply(object target, FoamSettings settings)
         {
-            if (!Binding.Supported || !settings.EnableEffect || !Binding.Enabled(settings))
+            if (!Binding.Supported || !settings.EnableEffect || !(Binding.TargetEnabled != null ? Binding.TargetEnabled(settings, target) : Binding.Enabled(settings)))
             {
                 Restore(target);
                 return;
@@ -82,9 +84,9 @@ namespace SimpleWaterFoam
                 Original = Binding.Field.GetValue(target);
                 revision = -1;
             }
-            if (!Owned || revision != settings.Revision)
+            if (!Owned || revision != settings.Revision || Binding.TargetValue != null)
             {
-                Desired = Binding.Value(settings, Original);
+                Desired = Binding.TargetValue == null ? Binding.Value(settings, Original) : Binding.TargetValue(settings, Original, target);
                 revision = settings.Revision;
             }
             Binding.Field.SetValue(target, Desired);
@@ -111,6 +113,7 @@ namespace SimpleWaterFoam
         private FoamSettings settings;
         private Type surfaceType;
         private FieldInfo registry;
+        private FieldInfo surfaceKind;
         private readonly List<WaterBinding> bindings = new List<WaterBinding>();
         private readonly Dictionary<Object, List<WaterSlot>> surfaces = new Dictionary<Object, List<WaterSlot>>();
         private readonly List<Object> removed = new List<Object>();
@@ -127,13 +130,46 @@ namespace SimpleWaterFoam
             foreach (WaterBinding binding in bindings) if (binding.Key == key) return binding.Supported;
             return false;
         }
+        private bool IsOcean(object target)
+        {
+            if (surfaceKind == null || !surfaceKind.FieldType.IsEnum) return false;
+            string kind = Convert.ToString(surfaceKind.GetValue(target));
+            return kind == "OceanSeaLake" || kind == "Ocean";
+        }
+        private bool HasSwellApi
+        {
+            get
+            {
+                return surfaceKind != null && surfaceKind.FieldType.IsEnum && Supports("SwellPatchSize") &&
+                Supports("SwellWind") && Supports("LargeWaves") && Supports("MediumWaves");
+            }
+        }
+        internal int OceanCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (var entry in surfaces)
+                {
+                    var surface = entry.Key as Behaviour;
+                    if (surface != null && surface.isActiveAndEnabled && surface.gameObject.scene.isLoaded && IsOcean(surface)) count++;
+                }
+                return count;
+            }
+        }
+        internal bool CanUseSwell { get { return running && HasSwellApi && OceanCount > 0; } }
+        internal string SwellStatus { get { return "OceanSeaLake/Ocean: " + OceanCount + " | spectrum API: " + (HasSwellApi ? "available" : "unavailable"); } }
+        private bool SwellApplies(FoamSettings options, object target)
+        {
+            return options.SwellEnabled && HasSwellApi && IsOcean(target);
+        }
         internal string Status
         {
             get
             {
                 int count = 0;
                 foreach (var b in bindings) if (b.Supported) count++;
-                return "v1.2.1 | API " + count + "/" + bindings.Count + " | surfaces " + surfaces.Count + " | " + (running ? "ready" : "stopped");
+                return "v1.3.0 | API " + count + "/" + bindings.Count + " | surfaces " + surfaces.Count + " | " + (running ? "ready" : "stopped");
             }
         }
         internal void Initialize(FoamSettings options)
@@ -145,6 +181,7 @@ namespace SimpleWaterFoam
                 if (surfaceType != null) break;
             }
             if (surfaceType != null && !typeof(Behaviour).IsAssignableFrom(surfaceType)) surfaceType = null;
+            surfaceKind = surfaceType == null ? null : surfaceType.GetField("surfaceType", FieldFlags);
             ConfigureBindings();
             foreach (var b in bindings)
                 Mod.Logger.Info("API " + b.Key + ": " + Describe(b));
@@ -214,7 +251,17 @@ namespace SimpleWaterFoam
             Add("SmoothFadeStart", typeof(float), s => s.ReflectionEnabled, (s, o) => s.SmoothFadeStart, "smoothnessFadeStart");
             Add("SmoothFadeDistance", typeof(float), s => s.ReflectionEnabled, (s, o) => s.SmoothFadeDistance, "smoothnessFadeDistance");
             Add("LargeWaves", typeof(float), s => s.WavesEnabled, (s, o) => Relative(o, s.LargeWaves), "largeBand0Multiplier");
+            bindings[bindings.Count - 1].TargetEnabled = (s, target) => s.SwellEnabled ? SwellApplies(s, target) : s.WavesEnabled;
+            bindings[bindings.Count - 1].TargetValue = (s, original, target) => s.SwellEnabled ? P(s.SwellAmplitude) : Relative(original, s.LargeWaves);
             Add("MediumWaves", typeof(float), s => s.WavesEnabled, (s, o) => Relative(o, s.MediumWaves), "largeBand1Multiplier");
+            bindings[bindings.Count - 1].TargetEnabled = (s, target) => s.SwellEnabled ? SwellApplies(s, target) : s.WavesEnabled;
+            bindings[bindings.Count - 1].TargetValue = (s, original, target) => s.SwellEnabled ? P(s.SwellMediumAmplitude) : Relative(original, s.MediumWaves);
+            Add("SwellPatchSize", typeof(float), s => s.SwellEnabled, (s, o) => s.SwellPatchSize, "repetitionSize");
+            bindings[bindings.Count - 1].TargetEnabled = SwellApplies;
+            Add("SwellWind", typeof(float), s => s.SwellEnabled, (s, o) => s.SwellWind, "largeWindSpeed");
+            bindings[bindings.Count - 1].TargetEnabled = SwellApplies;
+            Add("SwellChaos", typeof(float), s => s.SwellEnabled, (s, o) => P(s.SwellChaos), "largeChaos");
+            bindings[bindings.Count - 1].TargetEnabled = SwellApplies;
             Add("Ripples", typeof(float), s => s.WavesEnabled && s.RippleOverrideEnabled, (s, o) => Relative(o, s.Ripples), "ripplesWindSpeed");
             // Do not own timeMultiplier: a snapshot taken while paused can pin animation to zero.
             AddSuspended("AnimationSpeed", typeof(float), "Engine-owned clock; snapshot override removed in 1.2.1", "timeMultiplier");
@@ -296,7 +343,8 @@ namespace SimpleWaterFoam
                 var slots = new List<WaterSlot>();
                 foreach (var binding in bindings) if (binding.Supported) slots.Add(new WaterSlot(binding));
                 surfaces.Add(surface, slots);
-                Mod.Logger.Info("BOUND: " + surface.name + "; controls=" + slots.Count);
+                Mod.Logger.Info("BOUND: " + surface.name + "; kind=" + (surfaceKind == null ? "unknown" : Convert.ToString(surfaceKind.GetValue(surface))) + "; controls=" + slots.Count);
+                ReportWaveState(surface, "BOUND");
                 ReportMaterial(surface);
             }
             if (surfaces.Count == 0 && !emptyReported)
@@ -319,6 +367,7 @@ namespace SimpleWaterFoam
         internal void Dump()
         {
             Mod.Logger.Info("DIAGNOSTICS " + Status + ". Exposed field does not prove shader support.");
+            Mod.Logger.Info("SWELL " + SwellStatus);
             LogObservations("NOW");
             pendingObservations = running ? 2 : 0;
             nextObservation = Time.realtimeSinceStartup + 5f;
@@ -340,11 +389,38 @@ namespace SimpleWaterFoam
                 }
             }
         }
+        private static object ReadMember(object target, string name)
+        {
+            if (target == null) return null;
+            var field = target.GetType().GetField(name, FieldFlags);
+            return field == null ? null : field.GetValue(target);
+        }
+        private void ReportWaveState(Object surface, string phase)
+        {
+            try
+            {
+                object simulation = ReadMember(surface, "simulation");
+                object spectrum = ReadMember(simulation, "spectrum");
+                object rendering = ReadMember(simulation, "rendering");
+                Mod.Logger.Info("WAVE_STATE " + phase + " surface=" + surface.name +
+                    " kind=" + ReadMember(surface, "surfaceType") + " geometry=" + ReadMember(surface, "geometryType") +
+                    " patch=" + ReadMember(surface, "repetitionSize") + " wind=" + ReadMember(surface, "largeWindSpeed") +
+                    " band0=" + ReadMember(surface, "largeBand0Multiplier") + " band1=" + ReadMember(surface, "largeBand1Multiplier") +
+                    " fade0=" + ReadMember(surface, "largeBand0FadeToggle") +
+                    " fadeStart=" + ReadMember(surface, "largeBand0FadeStart") +
+                    " fadeDistance=" + ReadMember(surface, "largeBand0FadeDistance"));
+                Mod.Logger.Info("WAVE_OUTPUT " + phase + " spectrum=" + (spectrum == null ? "not exposed" : "available") +
+                    " activeBands=" + ReadMember(spectrum, "numActiveBands") + " patchSizes=" + ReadMember(spectrum, "patchSizes") +
+                    " amplitudes=" + ReadMember(rendering, "patchAmplitudeMultiplier"));
+            }
+            catch (Exception e) { Mod.Logger.Warn("Wave inspection: " + e.Message); }
+        }
         private void LogObservations(string phase)
         {
             foreach (var entry in surfaces)
             {
                 if (entry.Key == null) continue;
+                ReportWaveState(entry.Key, phase);
                 foreach (var binding in bindings)
                 {
                     if (binding.SuspendedReason == null || binding.Field == null) continue;
@@ -379,8 +455,8 @@ namespace SimpleWaterFoam
 {
     [FileLocation("ModsSettings/SimpleWaterFoam/FoamSettings")]
     [SettingsUITabOrder("General", "Water", "Reflections", "Waves", "Foam", "Caustics")]
-    [SettingsUIGroupOrder("Global", "Presets", "Diagnostics", "Optics", "Transmission", "ScatterColor", "Light", "Surface", "Motion", "Coverage", "Texture", "Lifetime", "CausticControls")]
-    [SettingsUIShowGroupName("Global", "Presets", "Diagnostics", "Optics", "Transmission", "ScatterColor", "Light", "Surface", "Motion", "Coverage", "Texture", "Lifetime", "CausticControls")]
+    [SettingsUIGroupOrder("Global", "Presets", "Diagnostics", "Optics", "Transmission", "ScatterColor", "Light", "Surface", "Motion", "Swell", "Coverage", "Texture", "Lifetime", "CausticControls")]
+    [SettingsUIShowGroupName("Global", "Presets", "Diagnostics", "Optics", "Transmission", "ScatterColor", "Light", "Surface", "Motion", "Swell", "Coverage", "Texture", "Lifetime", "CausticControls")]
     public sealed class FoamSettings : ModSetting
     {
         internal int Revision { get; private set; }
@@ -527,13 +603,13 @@ namespace SimpleWaterFoam
         [SettingsUISlider(min = 0.0f, max = 150.0f, step = 5.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
         [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledLargeWaves))]
         public int LargeWaves { get { return _LargeWaves; } set { var v = Limit(value, 0, 150); if (_LargeWaves != v) { _LargeWaves = v; Revision++; } } }
-        public bool DisabledLargeWaves() { return !(EnableEffect && WavesEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("LargeWaves")); }
+        public bool DisabledLargeWaves() { return !(EnableEffect && WavesEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("LargeWaves")) || SwellEnabled; }
         private int _MediumWaves;
         [SettingsUISection("Waves", "Motion")]
         [SettingsUISlider(min = 0.0f, max = 150.0f, step = 5.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
         [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledMediumWaves))]
         public int MediumWaves { get { return _MediumWaves; } set { var v = Limit(value, 0, 150); if (_MediumWaves != v) { _MediumWaves = v; Revision++; } } }
-        public bool DisabledMediumWaves() { return !(EnableEffect && WavesEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("MediumWaves")); }
+        public bool DisabledMediumWaves() { return !(EnableEffect && WavesEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("MediumWaves")) || SwellEnabled; }
         private bool _RippleOverrideEnabled;
         [SettingsUISection("Waves", "Motion")]
         [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRippleOverrideEnabled))]
@@ -551,6 +627,41 @@ namespace SimpleWaterFoam
         [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledAnimationSpeed))]
         public int AnimationSpeed { get { return _AnimationSpeed; } set { var v = Limit(value, 25, 200); if (_AnimationSpeed != v) { _AnimationSpeed = v; Revision++; } } }
         public bool DisabledAnimationSpeed() { return !(EnableEffect && WavesEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("AnimationSpeed")); }
+        private bool _SwellEnabled;
+        [SettingsUISection("Waves", "Swell")]
+        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellEnabled))]
+        public bool SwellEnabled { get { return _SwellEnabled; } set { var v = value; if (_SwellEnabled != v) { _SwellEnabled = v; Revision++; } } }
+        public bool DisabledSwellEnabled() { return !(EnableEffect) || !SwellEnabled && (Mod.Controller == null || !Mod.Controller.CanUseSwell); }
+        private float _SwellPatchSize;
+        [SettingsUISection("Waves", "Swell")]
+        [SettingsUISlider(min = 250.0f, max = 5000.0f, step = 250.0f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction, updateOnDragEnd = true)]
+        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellPatchSize))]
+        public float SwellPatchSize { get { return _SwellPatchSize; } set { var v = Limit(value, 250.0f, 5000.0f); if (_SwellPatchSize != v) { _SwellPatchSize = v; Revision++; } } }
+        public bool DisabledSwellPatchSize() { return !(EnableEffect && SwellEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("SwellPatchSize")) || (Mod.Controller == null || !Mod.Controller.CanUseSwell); }
+        private float _SwellWind;
+        [SettingsUISection("Waves", "Swell")]
+        [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction, updateOnDragEnd = true)]
+        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellWind))]
+        public float SwellWind { get { return _SwellWind; } set { var v = Limit(value, 0.0f, 100.0f); if (_SwellWind != v) { _SwellWind = v; Revision++; } } }
+        public bool DisabledSwellWind() { return !(EnableEffect && SwellEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("SwellWind")) || (Mod.Controller == null || !Mod.Controller.CanUseSwell); }
+        private int _SwellAmplitude;
+        [SettingsUISection("Waves", "Swell")]
+        [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
+        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellAmplitude))]
+        public int SwellAmplitude { get { return _SwellAmplitude; } set { var v = Limit(value, 0, 100); if (_SwellAmplitude != v) { _SwellAmplitude = v; Revision++; } } }
+        public bool DisabledSwellAmplitude() { return !(EnableEffect && SwellEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("LargeWaves")) || (Mod.Controller == null || !Mod.Controller.CanUseSwell); }
+        private int _SwellMediumAmplitude;
+        [SettingsUISection("Waves", "Swell")]
+        [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
+        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellMediumAmplitude))]
+        public int SwellMediumAmplitude { get { return _SwellMediumAmplitude; } set { var v = Limit(value, 0, 100); if (_SwellMediumAmplitude != v) { _SwellMediumAmplitude = v; Revision++; } } }
+        public bool DisabledSwellMediumAmplitude() { return !(EnableEffect && SwellEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("MediumWaves")) || (Mod.Controller == null || !Mod.Controller.CanUseSwell); }
+        private int _SwellChaos;
+        [SettingsUISection("Waves", "Swell")]
+        [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
+        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellChaos))]
+        public int SwellChaos { get { return _SwellChaos; } set { var v = Limit(value, 0, 100); if (_SwellChaos != v) { _SwellChaos = v; Revision++; } } }
+        public bool DisabledSwellChaos() { return !(EnableEffect && SwellEnabled) || (Mod.Controller == null || !Mod.Controller.Supports("SwellChaos")) || (Mod.Controller == null || !Mod.Controller.CanUseSwell); }
         private bool _FoamEnabled;
         [SettingsUISection("Foam", "Coverage")]
         [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledFoamEnabled))]
@@ -626,6 +737,18 @@ namespace SimpleWaterFoam
         public bool DisabledCausticsProjection() { return !(EnableEffect && CausticsOverride && CausticsOn) || (Mod.Controller == null || !Mod.Controller.Supports("CausticsProjection")); }
         [SettingsUISection("General", "Diagnostics")]
         public string RuntimeStatus { get { return Mod.Controller == null ? "Not initialized" : Mod.Controller.Status; } }
+        [SettingsUISection("Waves", "Swell")]
+        public string SwellStatus { get { return Mod.Controller == null ? "Load a city with water" : Mod.Controller.SwellStatus; } }
+        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledOceanSwellPreset))]
+        [SettingsUISection("Waves", "Swell")]
+        [SettingsUIButton]
+        public bool OceanSwellPreset
+        {
+            set
+            {
+                if (Mod.Controller == null || !Mod.Controller.CanUseSwell) return; EnableEffect = true; SwellPatchSize = 1500f; SwellWind = 45f; SwellAmplitude = 85; SwellMediumAmplitude = 40; SwellChaos = 40; SwellEnabled = true; ApplyAndSave();
+            }
+        }
         [SettingsUISection("General", "Presets")]
         [SettingsUIButton]
         public bool BalancedPreset
@@ -650,7 +773,7 @@ namespace SimpleWaterFoam
         {
             set
             {
-                EnableEffect = true; FoamEnabled = OpticsEnabled = RefractionColorEnabled = ScatteringColorEnabled = LightingEnabled = ReflectionEnabled = WavesEnabled = RippleOverrideEnabled = FoamLookEnabled = FoamPersistenceEnabled = CausticsOverride = false; ApplyAndSave();
+                EnableEffect = true; FoamEnabled = OpticsEnabled = RefractionColorEnabled = ScatteringColorEnabled = LightingEnabled = ReflectionEnabled = WavesEnabled = SwellEnabled = RippleOverrideEnabled = FoamLookEnabled = FoamPersistenceEnabled = CausticsOverride = false; ApplyAndSave();
             }
         }
         [SettingsUISection("General", "Diagnostics")]
@@ -662,6 +785,7 @@ namespace SimpleWaterFoam
                 if (Mod.Controller != null) Mod.Controller.Dump();
             }
         }
+        public bool DisabledOceanSwellPreset() { return Mod.Controller == null || !Mod.Controller.CanUseSwell; }
         public override void SetDefaults()
         {
             EnableEffect = true;
@@ -693,6 +817,12 @@ namespace SimpleWaterFoam
             RippleOverrideEnabled = false;
             Ripples = 100;
             AnimationSpeed = 100;
+            SwellEnabled = false;
+            SwellPatchSize = 1500.0f;
+            SwellWind = 45.0f;
+            SwellAmplitude = 85;
+            SwellMediumAmplitude = 40;
+            SwellChaos = 40;
             FoamEnabled = true;
             Amount = 40;
             WindIndependence = 100;
@@ -731,6 +861,7 @@ namespace SimpleWaterFoam
 {settings.GetOptionGroupLocaleID("Light"),pt?"Luz no volume da água":"Volume lighting"},
 {settings.GetOptionGroupLocaleID("Surface"),pt?"Suavidade e distância":"Smoothness and distance"},
 {settings.GetOptionGroupLocaleID("Motion"),pt?"Escalas e movimento":"Scales and motion"},
+{settings.GetOptionGroupLocaleID("Swell"),pt?"Ondas longas / Swell":"Ocean swell"},
 {settings.GetOptionGroupLocaleID("Coverage"),pt?"Cobertura":"Coverage"},
 {settings.GetOptionGroupLocaleID("Texture"),pt?"Material e textura":"Material and texture"},
 {settings.GetOptionGroupLocaleID("Lifetime"),pt?"Duração":"Lifetime"},
@@ -784,15 +915,27 @@ namespace SimpleWaterFoam
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.WavesEnabled)),pt?"Ajustar amplitude das ondas":"Override wave amplitude"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.WavesEnabled)),pt?"Ajusta as bandas grandes e médias. O tempo da animação permanece sob controle do jogo. Ondulações finas têm ativação separada.":"Changes large and medium wave amplitudes only. Leaves the water clock under game control. Ripple wind has a separate opt-in toggle."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.LargeWaves)),pt?"Ondas grandes — multiplicador (%)":"Large waves — multiplier (%)"},
-{settings.GetOptionDescLocaleID(nameof(FoamSettings.LargeWaves)),pt?"100 mantém o valor capturado ao ativar. A agitação fina multiplica o vento da banda de ripples, não diretamente sua amplitude. Se o valor original for zero, o resultado permanece zero.":"Large waves — multiplier (%). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.LargeWaves)),pt?"100 mantém o valor capturado ao ativar. A agitação fina multiplica o vento da banda de ripples, não diretamente sua amplitude. Se o valor original for zero, o resultado permanece zero. Desabilitado enquanto o modo de ondas longas controla as amplitudes.":"Relative to the captured value. Disabled while ocean swell controls amplitudes. Switching swell off restores this mode if enabled."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.MediumWaves)),pt?"Ondas médias — multiplicador (%)":"Medium waves — multiplier (%)"},
-{settings.GetOptionDescLocaleID(nameof(FoamSettings.MediumWaves)),pt?"100 mantém o valor capturado ao ativar. A agitação fina multiplica o vento da banda de ripples, não diretamente sua amplitude. Se o valor original for zero, o resultado permanece zero.":"Medium waves — multiplier (%). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.MediumWaves)),pt?"100 mantém o valor capturado ao ativar. A agitação fina multiplica o vento da banda de ripples, não diretamente sua amplitude. Se o valor original for zero, o resultado permanece zero. Desabilitado enquanto o modo de ondas longas controla as amplitudes.":"Relative to the captured value. Disabled while ocean swell controls amplitudes. Switching swell off restores this mode if enabled."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.RippleOverrideEnabled)),pt?"Ajustar vento das ondulações finas (experimental)":"Override ripple wind (experimental)"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.RippleOverrideEnabled)),pt?"Altera o espectro das ondulações finas. Ative separadamente para avaliar o efeito; começa desligado.":"Optional spectrum change; disabled by default and by presets. Enable separately to check its effect."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.Ripples)),pt?"Agitação fina — multiplicador (%)":"Ripple wind — multiplier (%)"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.Ripples)),pt?"100 mantém o valor capturado ao ativar. A agitação fina multiplica o vento da banda de ripples, não diretamente sua amplitude. Se o valor original for zero, o resultado permanece zero.":"Ripple wind — multiplier (%). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.AnimationSpeed)),pt?"Velocidade da animação (%) — suspenso":"Animation speed (%) — suspended"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.AnimationSpeed)),pt?"O tempo da água é controlado pelo jogo. A escrita neste campo foi removida para evitar capturar e reaplicar uma pausa. O valor salvo não é aplicado.":"Water timing stays under game control. This override was removed to avoid capturing and replaying a paused clock. Saved value is not applied."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.SwellEnabled)),pt?"Ativar ondas longas (experimental)":"Enable ocean swell (experimental)"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.SwellEnabled)),pt?"Ajusta o espectro oceânico e substitui os controles antigos de amplitude. Não altera o relógio da água nem converte rios em oceano.":"Uses the native ocean spectrum and replaces the older amplitude overrides while enabled. Leaves water timing unchanged. Does not convert river surfaces."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.SwellPatchSize)),pt?"Escala do domínio oceânico (m)":"Ocean spectrum patch size (m)"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.SwellPatchSize)),pt?"Tamanho da região periódica da simulação. Não é a distância exata entre cristas; também influencia a segunda banda.":"Size of the periodic simulation domain, not an exact crest-to-crest wavelength. Also affects the secondary band. Release to apply."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.SwellWind)),pt?"Vento gerador da ondulação (km/h)":"Swell-generating wind (km/h)"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.SwellWind)),pt?"Altera a distribuição de energia, forma e amplitude das bandas. É um parâmetro visual da água, não o vento climático da cidade.":"Controls native spectrum energy, shape and amplitude. Does not change city weather. Release to apply."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.SwellAmplitude)),pt?"Força da banda longa (%)":"Long-band strength (%)"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.SwellAmplitude)),pt?"Multiplicador absoluto de 0 a 1 da banda longa. Pode reativar uma banda cujo multiplicador original era zero. Não representa metros de altura.":"Absolute native band multiplier from 0 to 1. Can activate a band whose original multiplier was zero; not wave height in meters."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.SwellMediumAmplitude)),pt?"Força da banda secundária (%)":"Secondary-band strength (%)"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.SwellMediumAmplitude)),pt?"Multiplicador absoluto de 0 a 1. Use valores menores que a banda longa para destacar a ondulação ampla, mantendo detalhe sobreposto.":"Absolute native secondary-band multiplier from 0 to 1. Lower than long-band strength emphasizes broader undulations."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.SwellChaos)),pt?"Irregularidade da ondulação":"Swell irregularity"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.SwellChaos)),pt?"Valores menores favorecem a direção nativa do vento; maiores tornam o espectro menos direcional. Não escolhe uma nova direção.":"Lower values favor the existing wind direction. Higher values distribute energy across more directions."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.FoamEnabled)),pt?"Ajustar espuma":"Override foam"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.FoamEnabled)),pt?"Ativa a espuma nativa. Desativar devolve ao jogo o controle dos parâmetros de espuma.":"Override foam. See LEIA-ME.md for ranges and behavior."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.Amount)),pt?"Quantidade de espuma":"Foam amount"},
@@ -819,6 +962,8 @@ namespace SimpleWaterFoam
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.CausticsBlend)),pt?"Distância de mistura vertical das cáusticas.":"Vertical blend distance (m). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.CausticsProjection)),pt?"Distância de projeção (m)":"Projection distance (m)"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.CausticsProjection)),pt?"Valores maiores podem produzir padrões mais nítidos e também artefatos.":"Projection distance (m). Release the slider to apply. Unavailable controls are disabled. See LEIA-ME.md for ranges and behavior."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.OceanSwellPreset)),pt?"Preset: ondulação longa":"Preset: long swell"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.OceanSwellPreset)),pt?"Ativa somente o modo de ondas longas: domínio 1500 m, vento 45 km/h, banda longa 85%, secundária 40%, irregularidade 40. Preserva cores, espuma, reflexos e demais ajustes.":"Preset: long swell. See LEIA-ME.md for details."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.BalancedPreset)),pt?"Preset inicial equilibrado":"Balanced starting preset"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.BalancedPreset)),pt?"Configuração experimental: ajusta água, reflexos, amplitudes grandes/médias e aparência da espuma. Tempo da água, ondulações finas, cáusticas e persistência continuam sob controle do jogo.":"Balanced starting preset. See LEIA-ME.md for details."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.FoamOnlyPreset)),pt?"Somente espuma (versão anterior)":"Foam only (previous version)"},
@@ -827,6 +972,8 @@ namespace SimpleWaterFoam
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.NativePreset)),pt?"Desativa todos os grupos sem apagar os valores dos sliders. O mod permanece disponível.":"Use game values. See LEIA-ME.md for details."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.WriteDiagnostics)),pt?"Registrar diagnóstico no log":"Write diagnostics to log"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.WriteDiagnostics)),pt?"Registra campos e material no log. Volte à cidade: duas amostras adicionais, após 5 e cerca de 15 segundos, observam os campos suspensos sem alterá-los.":"Write diagnostics to log. See LEIA-ME.md for details."},
+{settings.GetOptionLabelLocaleID(nameof(FoamSettings.SwellStatus)),pt?"Superfícies compatíveis com swell":"Swell-compatible surfaces"},
+{settings.GetOptionDescLocaleID(nameof(FoamSettings.SwellStatus)),pt?"Carregue uma cidade. O modo exige superfície identificada como oceânica pela engine e os campos do espectro. Não distingue regiões geográficas dentro de uma superfície única.":"Load a city. Requires an engine-classified ocean surface and spectrum fields. Does not identify geographical regions inside one shared surface."},
 {settings.GetOptionLabelLocaleID(nameof(FoamSettings.RuntimeStatus)),pt?"Controles detectados":"Detected controls"},
 {settings.GetOptionDescLocaleID(nameof(FoamSettings.RuntimeStatus)),pt?"Campo detectado não garante efeito visual no material. Grupos novos começam desativados. Reabra as opções se a disponibilidade mudar.":"An exposed field does not guarantee a visible material effect. New groups start disabled. Reopen options if availability changes."}
 };
