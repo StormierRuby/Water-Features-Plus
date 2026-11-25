@@ -1,236 +1,49 @@
-# Simple Water Foam
+# Water Features Plus
 
-Configurable water, foam, and wave visuals for **Cities: Skylines II**.
+Adjust the whitecaps and ocean swell in **Cities: Skylines II**. Start with scattered foam on open water, then layer medium waves over a longer swell. The mod uses the game's own water renderer and gives you an A/B switch to compare the same view with the original water.
 
-Simple Water Foam exposes selected parameters of the game's native water system through an in-game settings panel. Adjust foam coverage, water color, surface smoothness, wave strength, and caustics, then compare the result with the original appearance using an A/B toggle.
+**Version 1.4.1** · Game target **1.6.4f1** · English and Brazilian Portuguese
 
-**Current version: 1.3.1 — settings cleanup and wave-mode comparison.**
+## Install and try it
 
-The development baseline is **Cities: Skylines II 1.6.4f1**. The existing controls and the 1.3.0 Ocean Swell implementation have been reported working in that version. Version 1.3.1 preserves the water controller behavior, removes four unused UI sliders, and adds two buttons for switching wave modes. The revised UI still needs an in-game check.
+For the published release, open **Paradox Mods** in the game, add **Water Features Plus** to your active playset and restart the game. Load a city with open water, then open **Options → Water Features Plus**. The GitHub source package is for building the mod yourself. Players installing through Paradox Mods only need the game.
 
-## Features
+1. Aim the camera across open water so you can distinguish individual crests. The default profile has **Foam amount** at **40** and **Wind independence** at **100**. Move **Foam → Foam amount** and release the slider to compare coverage.
+2. Open **Waves → Ocean swell** and press **Preset: long swell**. Compare the long-band strength at **0%** and **100%** while keeping the secondary band fixed. Then repeat with the secondary band. The first changes broad undulations and the second adds smaller moving detail.
+3. Switch **General → Apply adjustments (A/B comparison)** off and on to compare both looks. This keeps your slider values. **Foam only (default)** and **Balanced starting preset** reset slider values when selected.
 
-Settings are organized into six tabs, with English and Brazilian Portuguese localization.
+## Controls
 
-| Tab | Controls |
+| Tab | What it changes |
 | --- | --- |
-| **General** | Master A/B toggle, presets, runtime status, and diagnostics |
-| **Water** | Absorption distance, refraction, transmission and scattering colors, and selected lighting contributions |
-| **Reflections** | Near and distant smoothness, with a configurable distance transition |
-| **Waves** | Large and medium wave multipliers, an optional ripple-wind override, and experimental ocean swell controls |
-| **Foam** | Amount, wind independence, roughness, texture tiling, and experimental persistence |
-| **Caustics** | Enable/disable override, intensity, vertical blending, and projection distance |
+| **General** | A/B toggle, presets, detected controls and a diagnostic log button. **Use game values** releases every override and keeps the slider values. |
+| **Foam** | Coverage, response to wind, roughness and texture scale. Use coverage to change how much foam forms. |
+| **Waves** | Long and secondary swell strengths, patch size, wind, irregularity, direction, native amplitude multipliers and fine ripple details. The two swell strengths range from 0% to 200%. |
+| **Water** | Absorption and refraction distances, transmission and scattering colors, ambient scattering and wave-body lighting where available. |
+| **Reflections** | Near and far surface smoothness and the distance over which they blend. |
+| **Caustics** | Underwater light patterns, intensity, vertical blending, projection distance and an optional ocean source band. Compare in shallow water. |
 
-Version 1.3.1 displays **30 sliders**, subject to available engine fields, surface type, and enabled settings groups. Four previously suspended sliders have been removed from the panel. Their saved properties remain hidden for compatibility.
+**Distance fade under Waves** controls fine ripples as the camera moves. A start of 50 m and a length of 200 m give a transition from 50 to 250 m. A change in foam lifetime has not been established for the target game version. The experimental persistence slider from the development builds is hidden.
 
-Changes apply when you release a slider. Settings are global to the mod rather than specific to each city.
+**Wave modes.** Ocean swell sets absolute strengths on eligible ocean-type surfaces. Native amplitude controls multiply each surface's original values, so a band starting at zero stays at zero in that mode. **Resume saved swell** returns to your previous swell profile. Patch size controls the simulation domain in metres. The height of an individual wave also depends on wind and band strength.
 
-## Ocean Swell
+Settings are shared across cities. The options depend on the fields and surface types available in the running game. Load a city for surface-dependent controls. The game controls water animation speed and the city's water simulation. If two mods adjust the same water property, disable the overlapping group in one of them before comparing results.
 
-The **Waves → Ocean swell** group is intended to make broad undulations more prominent while retaining smaller waves and surface ripples.
+## Troubleshooting
 
-The earlier amplitude controls multiply each surface's original values. That changes wave strength, but does not adjust the spatial scale of the spectrum. An original multiplier of zero also remains zero.
+- **The panel is missing.** Confirm the mod is enabled in the active playset. For local builds, check that the mod project deployed the new DLL and that only the intended copy is active.
+- **Swell is unavailable.** Check the compatible surface count under **Waves**. The renderer classifies surfaces, and one surface can cover different parts of a map.
+- **A value changes but the surface looks the same.** Keep the camera and time of day fixed, change one setting, then use A/B. For ripple distance, compare the same patch at different camera distances. For caustics, keep the bottom visible.
+- **Reporting an issue.** Choose **General → Write diagnostics to log**, return to the city for about 15 seconds and share the relevant entries, mod and game versions, active groups, and steps. The Windows log is at `%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Logs\WaterFeaturesPlus.log`.
 
-Ocean Swell additionally adjusts the native simulation domain and generating wind, and provides absolute strength controls for the two existing swell bands. It uses the native HDRP water simulation; it does not introduce an additional wave band or a replacement displacement shader.
+## Build from source on Windows
 
-| Control | Range | Starting preset |
-| --- | --- | --- |
-| **Ocean spectrum patch size** | 250–5000 m | 1500 m |
-| **Swell-generating wind** | 0–100 km/h | 45 km/h |
-| **Long-band strength** | 0–100% | 85% |
-| **Secondary-band strength** | 0–100% | 40% |
-| **Swell irregularity** | 0–100 | 40 |
+Install the code-modding toolchain in **Options → Modding** and close the game. Open the included **SimpleWaterFoam.csproj** in Visual Studio, choose **Release** and rebuild the project. The template imports the installed game tools through `CSII_TOOLPATH`. It supplies the game references and deploys the local mod. A successful startup writes `WaterFeaturesPlus 1.4.1 loaded` to the mod log. If an existing development copy is present, the build targets the same local mod folder.
 
-- **Patch size** is the size of the periodic simulation domain, not an exact crest-to-crest wavelength. It also affects the secondary band.
-- **Generating wind** changes the native wave spectrum. It does not change the city's weather, and its effect on wave height is not linear.
-- **Band strength** maps directly to a native multiplier from 0 to 1. For example, 85% sets 0.85; it is not a height in meters or 85% of the previous value.
-- **Irregularity** changes how strongly the swell follows the existing wind direction. It does not select a new direction.
+The entry point is in `src/Mod.cs`. The runtime, field bindings and diagnostic routines are in `src/Runtime/`. The options and translations are in `src/Settings/`. The standalone regression suite runs with `dotnet run --project tests/ControllerTests.csproj -c Release` on the .NET 8 SDK. It exercises the controller with substitute game and Unity types. A release build and visual testing require the installed game.
 
-The two swell bands share parts of the native spectrum configuration. They are not completely independent wave generators.
+## References and acknowledgements
 
-### Enable and compare
+Unity's HDRP sources informed the field mappings. The game ships its own materials and engine build. [HDRP 14 water properties](https://docs.unity.cn/Packages/com.unity.render-pipelines.high-definition@14.0/manual/WaterSystem-Properties.html) · [Unity water runtime, 2022.3 branch](https://github.com/Unity-Technologies/Graphics/tree/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water)
 
-1. Load a city with water.
-2. Open **Options → Simple Water Foam → Waves → Ocean swell**.
-3. Select **Preset: long swell**.
-4. Return to the city and compare from the same camera position and lighting conditions.
-
-To isolate the broad waves, temporarily set **Secondary-band strength** to **0** and compare **Long-band strength** at **0** and **85**. Then bring the secondary band back to around **25–40**.
-
-The swell preset preserves your water colors, foam, reflection settings, and other groups. Swell starts disabled in a new configuration. Changing the spectrum may produce a visible transition as it is regenerated; changing generating wind can also affect foam production.
-
-### Surface compatibility
-
-Swell requires a surface identified by the engine as `OceanSeaLake` or `Ocean`, together with the required spectrum fields. The panel displays the number of compatible surfaces after a city is loaded.
-
-This classification belongs to the engine surface, not to geographical regions. If the game represents a sea, lake, and river sections with one shared ocean surface, the changes apply across that surface. The mod does not convert river surfaces into oceans or provide a geographical selection mask.
-
-While swell is enabled, the older large/medium amplitude sliders are disabled. Turning swell off restores the previous spectrum settings and returns amplitude control to the older mode if it was enabled. The older amplitude overrides are also released on non-ocean surfaces while swell is active.
-
-### Test the native amplitude controls
-
-The original **Large waves — multiplier** and **Medium waves — multiplier** controls are disabled while Swell is active because both modes use the same native amplitude fields. They have not been removed.
-
-In **Waves → Native amplitudes and ripple wind**, select **Test native amplitude controls**. This disables Swell and enables **Override wave amplitude**, preserving all slider values. Compare one multiplier at **0%, 100%, and 150%** while keeping the camera and lighting fixed. For an amplitude-only comparison, leave **Override ripple wind** off.
-
-- **0%:** removes that band's amplitude contribution.
-- **100%:** preserves the original native amplitude; merely enabling the override at this value is expected to make little or no difference.
-- **150%:** multiplies the original amplitude by 1.5. A small baseline still produces a modest result, and a zero baseline stays zero.
-
-Select **Ocean swell → Resume saved swell** to return to your existing Swell configuration. This button does not apply the starting preset or reset your custom settings. These buttons switch between two amplitude modes; the legacy multipliers are not an additional layer on top of Swell.
-
-The existing dependency between the **Override wave amplitude** toggle and the optional ripple-wind override is retained in this patch. The mode-switch buttons do not change the ripple override flag.
-
-## Build and install
-
-This source package is intended for a project generated with the official Cities: Skylines II C# mod template. It is not a precompiled mod or a standalone build project.
-
-### Requirements
-
-- Cities: Skylines II, with the official modding toolchain configured.
-- A C# mod project created from the game's template.
-- Visual Studio or another compatible C# development environment.
-- The game assemblies and .NET SDK expected by that template.
-
-The development setup used the **Unity 2022.3.62f2** toolchain selected by game version **1.6.4f1**. There is no custom shader or AssetBundle build step for this implementation.
-
-### Update an existing project
-
-1. Close the game completely.
-2. Back up your working `Mod.cs` outside the project directory.
-3. Open the actual mod solution/project in your IDE.
-4. Replace the project's `Mod.cs` with the supplied implementation. Do not keep a second copy of the same classes in the project.
-5. Preserve your `.csproj`, toolchain imports, and build configuration.
-6. Rebuild the project using its configured local mod deployment.
-7. Launch the game, load a city, and open **Options → Simple Water Foam**.
-
-The deployed local mod should be under:
-
-```text
-%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Mods\SimpleWaterFoam
-```
-
-Building a loose file opened from a ZIP does not update the project or its deployed DLL. Verify that the runtime log contains:
-
-```text
-SimpleWaterFoam 1.3.1: native water controls
-```
-
-The assembly version displayed elsewhere may still come from your `.csproj`.
-
-### Assembly references
-
-The template and its imports should resolve the game's assemblies. The implementation uses:
-
-```xml
-<ItemGroup>
-  <Reference Include="Game"><Private>false</Private></Reference>
-  <Reference Include="UnityEngine.CoreModule"><Private>false</Private></Reference>
-  <Reference Include="Colossal.Core"><Private>false</Private></Reference>
-  <Reference Include="Colossal.Logging"><Private>false</Private></Reference>
-  <Reference Include="Colossal.IO.AssetDatabase"><Private>false</Private></Reference>
-  <Reference Include="Colossal.Localization"><Private>false</Private></Reference>
-</ItemGroup>
-```
-
-Add only references that are missing. In particular, a `CS0012` error involving `LocalizationManager` requires `Colossal.Localization`.
-
-Water fields are discovered through reflection, so the implementation does not require a direct reference to the HDRP assembly. The mods listed under References are not runtime dependencies.
-
-## Presets and restoration
-
-| Option | Behavior |
-| --- | --- |
-| **Apply adjustments (A/B comparison)** | Suspends or reapplies the selected groups without discarding slider values |
-| **Balanced starting preset** | Resets settings and enables a starting combination of water, reflection, wave amplitude, and foam appearance adjustments; swell remains disabled |
-| **Foam only (previous version)** | Resets settings and enables foam amount and wind-independence adjustments |
-| **Use game values** | Disables the override groups, including swell, while preserving slider values |
-| **Test native amplitude controls** | Disables Swell and enables the original relative multipliers without resetting slider values |
-| **Resume saved swell** | Restores Swell mode using existing settings rather than the starting preset |
-| **Preset: long swell** | Enables swell with the values above while retaining other appearance settings |
-
-The controller captures original field values when an override becomes active. When it releases a field, it restores the captured value if that field still contains the mod's last write. A more recent external write is preserved when it can be detected.
-
-Avoid enabling multiple mods that continuously override the same water parameters. Restoration logic cannot resolve competing active controllers.
-
-## Current limitations
-
-- The mod adjusts native water parameters. It does not replace the water shader, add custom foam textures, or implement shoreline breaking waves, boat wakes, or boat buoyancy.
-- It does not modify the city's hydrological simulation.
-- Reflection controls adjust smoothness; they do not add SSR, ray tracing, or a separate reflection system.
-- Finding an engine field does not guarantee that the game's material visibly uses it. Masks, geometry, distance fading, lighting, and the rendering path can affect the result.
-- Swell cannot guarantee a specific wave height or wavelength. The reported working result applies to the tested setup; behavior on other game versions or rendering paths is unverified.
-- There are no in-game FPS measurements for version 1.3.1.
-
-### Controls removed from the panel
-
-| Control | Reason |
-| --- | --- |
-| Height scattering | No visible effect was reported in the tested CS2 setup |
-| Displacement scattering | No visible effect was reported in the tested CS2 setup |
-| Wave-tip lighting | No visible effect was reported in the tested CS2 setup |
-| Animation speed | Removed from active control to prevent a captured pause value from freezing water animation |
-
-These four controls are hidden from the panel in 1.3.1. Their saved values remain compatible with earlier settings, and the fields remain read-only for diagnostics. **Volume lighting** retains **Ambient scattering** and **Wave-body lighting** when their native fields are available. The mod does **not** write to `timeMultiplier`; pause, resume, and simulation speed remain under game control.
-
-## Diagnostics and troubleshooting
-
-The mod writes to:
-
-```text
-%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Logs\SimpleWaterFoam.log
-```
-
-Select **General → Write diagnostics to log**, return to the city, and let it run for at least **20 seconds**. The diagnostic captures an immediate reading and two additional readings after approximately 5 and 15 seconds.
-
-| Log entry | Meaning |
-| --- | --- |
-| `API` | Field availability, including suspended controls |
-| `BOUND` | Discovered surface and engine surface type |
-| `SWELL` | Compatible surface count and required API availability |
-| `WAVE_STATE` | Current domain, wind, band strengths, geometry, and long-band distance fading |
-| `WAVE_OUTPUT` | Internal band count, patch sizes, and rendering multipliers, when exposed |
-| `OBSERVE` | Read-only samples of suspended fields, including the animation clock |
-| `Disabled control` | A field failed and its override was isolated |
-| `Controller stopped` | A broader failure stopped the controller and triggered a restoration attempt |
-
-If `WAVE_OUTPUT` reports `not exposed` or empty values, the internal structure could not be inspected. That alone does not mean the simulation has stopped.
-
-| Symptom | Check |
-| --- | --- |
-| No settings panel or version message | Confirm that the actual project was rebuilt and its updated DLL was deployed |
-| A slider is disabled | Load a city, enable the master toggle and the relevant group, then check field availability; controls unavailable in the current engine remain disabled |
-| Swell is unavailable | Check **Swell-compatible surfaces** and the `SWELL` diagnostic entry |
-| Old amplitude sliders are disabled | Select **Test native amplitude controls** to switch out of Swell, then **Resume saved swell** to return |
-| Values change but appearance does not | Compare clearly separated values under the same conditions; inspect `WAVE_STATE` and `WAVE_OUTPUT` before assuming shader support |
-| No mod messages in `Player.log` | Check the dedicated `Logs\SimpleWaterFoam.log` file |
-
-For a useful bug report, include the game version, the mod version line, enabled settings groups, relevant diagnostics, and reproducible steps. For visual issues, include before/after screenshots from the same view and lighting conditions.
-
-## Validation
-
-The 1.3.1 implementation passed **81 automated controller checks** using substitute API types: 51 checks for existing behavior and 30 for swell and mode switching. A separate regression check covered pause, resume, and speed changes.
-
-Checks covered activation from a zero amplitude, mode switching, restoration, missing fields, surface eligibility, value limits, and preservation of other settings. They did not execute the actual water shader or simulation, compile against the installed game assemblies, or validate the real options UI, serialization, or performance.
-
-## Version notes
-
-- **1.3.1:** Removed the animation speed and three suspended lighting sliders from the panel, retained their saved values, and added mode-switch buttons. The water controller is unchanged except for its version label.
-- **1.3.0:** Added the Ocean Swell group, five sliders, a dedicated preset, surface compatibility status, and wave diagnostics. Preserved the animation fix.
-- **1.2.1:** Removed writes to the water animation clock, separated the ripple-wind override, and suspended three lighting controls without observed visual effects.
-
-## References
-
-Native water behavior was investigated using Unity's upstream HDRP sources. Those sources describe the reference implementation, not the exact binaries or custom materials shipped with Cities: Skylines II.
-
-- [Unity HDRP 14 — Water properties](https://docs.unity.cn/Packages/com.unity.render-pipelines.high-definition@14.0/manual/WaterSystem-Properties.html)
-- [Unity Graphics — WaterSurface.cs, 2022.3 branch](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/WaterSurface.cs)
-- [Unity Graphics — Water simulation parameters](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.cs)
-- [Unity Graphics — Water simulation update](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.Simulation.cs)
-
-Public examples consulted for water modding and native settings UI patterns:
-
-- [WaterVisualTweaks](https://github.com/HX2003/WaterVisualTweaks) — water modding and options reference.
-- [TrafficToolEssentials settings](https://github.com/ZessonsDE/TrafficToolEssentials/blob/main/TrafficToolEssentials/Settings.cs) — tabs, sliders, and conditional availability.
-- [AreaBucket settings](https://github.com/Cmyna/AreaBucket/blob/master/Setting.cs) — fractional slider formatting.
-- [CS2MultiplayerMod settings](https://github.com/Rollocraft/CS2MultiplayerMod/blob/master/CS2MultiplayerMod/Setting.cs) — tabs, buttons, and status entries.
+Public examples consulted during development cover water controls, settings tabs, slider formatting and status rows. These mods are optional and can be used as references when working on the source. [WaterVisualTweaks](https://github.com/HX2003/WaterVisualTweaks) · [TrafficToolEssentials](https://github.com/ZessonsDE/TrafficToolEssentials) · [AreaBucket](https://github.com/Cmyna/AreaBucket) · [CS2MultiplayerMod](https://github.com/Rollocraft/CS2MultiplayerMod)
