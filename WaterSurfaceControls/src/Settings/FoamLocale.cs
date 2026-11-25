@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Colossal;
 
-namespace WaterFeaturesPlus
+namespace WaterSurfaceControls
 {
     public sealed class FoamLocale : IDictionarySource
     {
@@ -15,7 +15,7 @@ namespace WaterFeaturesPlus
         {
             return new Dictionary<string, string>
             {
-                [settings.GetSettingsLocaleID()] = "Water Features Plus",
+                [settings.GetSettingsLocaleID()] = "Water Surface Controls",
                 [settings.GetEnumValueLocaleID(CausticsSource.Game)] = pt ? "Jogo" : "Game",
                 [settings.GetEnumValueLocaleID(CausticsSource.Long)] = pt ? "Longa" : "Long",
                 [settings.GetEnumValueLocaleID(CausticsSource.Secondary)] = pt ? "Secundária" : "Secondary",
@@ -157,7 +157,7 @@ namespace WaterFeaturesPlus
                 [settings.GetOptionLabelLocaleID(nameof(FoamSettings.NativePreset))] = pt ? "Usar valores do jogo" : "Use game values",
                 [settings.GetOptionDescLocaleID(nameof(FoamSettings.NativePreset))] = pt ? "Desativa todos os grupos sem apagar os valores dos sliders. O mod permanece disponível." : "Release all groups to the game and keep your current slider values.",
                 [settings.GetOptionLabelLocaleID(nameof(FoamSettings.WriteDiagnostics))] = pt ? "Registrar diagnóstico no log" : "Write diagnostics to log",
-                [settings.GetOptionDescLocaleID(nameof(FoamSettings.WriteDiagnostics))] = pt ? "Registra campos e material no log. Volte à cidade: duas amostras adicionais, após 5 e cerca de 15 segundos, observam os campos suspensos sem alterá-los." : "Write field, material and wave information to WaterFeaturesPlus.log. Return to the city for two follow-up samples.",
+                [settings.GetOptionDescLocaleID(nameof(FoamSettings.WriteDiagnostics))] = pt ? "Registra campos e material no log. Volte à cidade: duas amostras adicionais, após 5 e cerca de 15 segundos, observam os campos suspensos sem alterá-los." : "Write field, material and wave information to WaterSurfaceControls.log. Return to the city for two follow-up samples.",
                 [settings.GetOptionLabelLocaleID(nameof(FoamSettings.SwellStatus))] = pt ? "Superfícies compatíveis com swell" : "Swell-compatible surfaces",
                 [settings.GetOptionDescLocaleID(nameof(FoamSettings.SwellStatus))] = pt ? "Carregue uma cidade. O modo exige superfície identificada como oceânica pela engine e os campos do espectro. Não distingue regiões geográficas dentro de uma superfície única." : "Load a city. Requires an engine-classified ocean surface and spectrum fields. Does not identify geographical regions inside one shared surface.",
                 [settings.GetOptionLabelLocaleID(nameof(FoamSettings.RuntimeStatus))] = pt ? "Controles detectados" : "Detected controls",

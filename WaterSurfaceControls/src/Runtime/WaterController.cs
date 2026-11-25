@@ -5,7 +5,7 @@ using System.Reflection;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace WaterFeaturesPlus
+namespace WaterSurfaceControls
 {
     public sealed partial class WaterController : MonoBehaviour
     {

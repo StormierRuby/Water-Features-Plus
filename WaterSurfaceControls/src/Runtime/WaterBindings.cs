@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using UnityEngine;
 
-namespace WaterFeaturesPlus
+namespace WaterSurfaceControls
 {
     public sealed partial class WaterController
     {

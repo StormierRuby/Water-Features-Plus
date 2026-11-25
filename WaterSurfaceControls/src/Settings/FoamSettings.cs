@@ -4,7 +4,7 @@ using Game.Modding;
 using Game.Settings;
 using Game.UI;
 
-namespace WaterFeaturesPlus
+namespace WaterSurfaceControls
 {
     public enum CausticsSource
     {
@@ -15,7 +15,7 @@ namespace WaterFeaturesPlus
     }
 
     // Keep the original settings path for upgrades from Simple Water Foam.
-    [FileLocation("ModsSettings/SimpleWaterFoam/FoamSettings")]
+    [FileLocation("ModsSettings/WaterSurfaceControls/FoamSettings")]
     [SettingsUITabOrder("General", "Water", "Reflections", "Waves", "Foam", "Caustics")]
     [SettingsUIGroupOrder("Global", "Presets", "Diagnostics", "Optics", "Transmission", "ScatterColor", "Light", "Surface", "Motion", "Swell", "RippleFade", "Coverage", "Texture", "CausticControls")]
     [SettingsUIShowGroupName("Global", "Presets", "Diagnostics", "Optics", "Transmission", "ScatterColor", "Light", "Surface", "Motion", "Swell", "RippleFade", "Coverage", "Texture", "CausticControls")]
