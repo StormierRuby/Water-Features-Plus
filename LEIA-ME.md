@@ -1,152 +1,102 @@
-# Simple Water Foam — 1.3.1: limpeza de controles
+# Water Features Plus
 
-Esta versão remove quatro sliders suspensos do painel e acrescenta dois botões para comparar os modos de amplitude. O controlador de água e o Swell da versão 1.3.0, confirmado como funcionando, permanecem inalterados. O pacote 1.3.0 foi mantido separadamente.
+Ajuste a espuma, combine ondas longas e médias e controle como a água de **Cities: Skylines II** responde à luz. O mod usa a superfície de água nativa do jogo. Os ajustes são visuais e se aplicam às cidades que você carregar.
 
-**Este ZIP contém código-fonte, não uma DLL pronta.** Use o projeto que já funciona no seu Cities: Skylines II 1.6.4f1. A compilação e os testes aqui usaram substitutos das bibliotecas do jogo; a interface revisada da 1.3.1 ainda precisa ser conferida no CS2. O comportamento do Swell 1.3.0 foi confirmado por você.
+**Versão do mod** 1.4.1 · **Versão-alvo do jogo** 1.6.4f1 · **Interface** Português do Brasil e inglês
 
-## O que mudou nesta atualização
+## Primeiros ajustes
 
-- **Removidos do painel:** Animation speed, Height scattering, Displacement scattering e Wave-tip lighting. Não haverá mais sliders cinza para esses recursos suspensos.
-- **Volume lighting:** mantém Ambient scattering e Wave-body lighting, sujeitos à disponibilidade dos campos.
-- **Test native amplitude controls / Testar amplitudes nativas:** desliga Swell e ativa os multiplicadores relativos, sem redefinir os valores dos sliders.
-- **Resume saved swell / Retomar Swell salvo:** volta ao Swell usando seus valores atuais, sem aplicar o preset inicial.
-- **30 sliders visíveis:** as quatro propriedades antigas ficam ocultas somente para preservar a configuração. Continuam sem escrever nos campos nativos.
+1. Carregue uma cidade e posicione a câmera de frente para um trecho de água aberta. Abra **Opções → Water Features Plus**.
+2. Na guia **Espuma**, mova **Quantidade de espuma** e solte o controle para aplicar. Em um perfil novo, somente a espuma vem ajustada, com quantidade **40** e independência do vento **100**.
+3. Para experimentar ondas maiores, abra **Ondas → Ondas longas / Swell** e clique em **Preset: ondulação longa**. O preset ajusta as duas bandas, o domínio, o vento e a irregularidade. Os ajustes de espuma, cor e reflexos são preservados.
+4. Para comparar o resultado no mesmo enquadramento, desligue e religue **Geral → Aplicar ajustes (comparação A/B)**. Os valores dos sliders ficam salvos.
 
-### Investigar as amplitudes antigas
+## Controles por guia
 
-Os sliders Large waves multiplier e Medium waves multiplier não foram removidos. Ficam indisponíveis durante Swell porque os dois modos escrevem nas mesmas amplitudes nativas. Em **Ondas → Amplitudes nativas e vento fino**, use **Testar amplitudes nativas** para liberá-los.
+O painel tem **32 sliders em seis guias**, além de seletores, interruptores e presets. A disponibilidade depende do grupo ativado, da superfície carregada e dos campos que a versão do jogo expõe.
 
-Compare um de cada vez em **0%, 100% e 150%**, mantendo câmera e iluminação. Para isolar amplitudes, deixe Override ripple wind desligado. **100% mantém o valor original**, portanto apenas ativar o grupo pode quase não mudar a aparência. 150% equivale a 1,5 vezes a amplitude original; uma base baixa continua baixa e uma base zero continua zero.
-
-Para voltar ao resultado anterior, clique em **Retomar Swell salvo**, no grupo Swell. Os botões preservam as configurações de aparência, o estado do ajuste de ripples e os valores de ambos os modos. A dependência antiga dos ripples em relação ao interruptor WavesEnabled não foi alterada nesta correção.
-
-## Como funciona o Swell
-
-O controle anterior de ondas grandes apenas multiplicava a amplitude que já existia. Não alterava a escala espacial do espectro; uma banda com amplitude original zero continuava em zero.
-
-O novo grupo **Ondas longas / Swell** controla a região periódica da simulação, o vento visual que gera o espectro, a força das duas bandas e sua irregularidade. No HDRP upstream, superfícies oceânicas combinam duas bandas de swell com uma banda opcional de ripples. O objetivo é destacar ondulações amplas, mantendo ondas menores sobrepostas. Não foi criada uma quarta banda nem um shader de deslocamento próprio.
-
-| Controle | Faixa | Preset inicial | Campo nativo |
-| --- | --- | --- | --- |
-| Escala do domínio oceânico | 250–5000 m | 1500 m | `repetitionSize` |
-| Vento gerador da ondulação | 0–100 km/h | 45 km/h | `largeWindSpeed` |
-| Força da banda longa | 0–100% | 85% | `largeBand0Multiplier` |
-| Força da banda secundária | 0–100% | 40% | `largeBand1Multiplier` |
-| Irregularidade da ondulação | 0–100 | 40 | `largeChaos` |
-
-**1500 m é o tamanho do domínio periódico, não a distância entre duas cristas.** A escala e o vento modificam a distribuição das ondas; não existe aqui um slider de comprimento de onda exato. As duas bandas também não têm espectros totalmente independentes: o HDRP deriva seus tamanhos a partir do domínio principal e compartilha o vento gerador.
-
-85% corresponde a um multiplicador nativo absoluto de 0,85. Não significa 85% da amplitude anterior nem uma altura em metros. Assim, o novo modo pode atribuir força a uma banda cujo multiplicador era zero. A altura efetivamente renderizada continua dependendo do espectro, das máscaras e do material do jogo.
-
-## Instalar no projeto existente
-
-1. Feche totalmente o jogo. Guarde o `Mod.cs` que já funciona **fora da pasta do projeto**.
-2. Extraia este ZIP e abra no Visual Studio a solução/projeto que você já compilou com sucesso.
-3. Pelo Explorador de Soluções, abra o `Mod.cs` desse projeto e substitua todo seu conteúdo pelo deste pacote.
-4. Salve e use **Recompilar / Rebuild** no projeto. Preserve seu `.csproj` e as referências existentes.
-5. Abra o jogo e carregue uma cidade com água. Na guia Geral ou no log, confirme **v1.3.1**.
-6. Entre em **Opções → Simple Water Foam → Ondas → Ondas longas / Swell** e clique em **Preset: ondulação longa**. Em inglês: **Waves → Ocean swell → Preset: long swell**.
-7. Retorne à cidade e compare com a mesma câmera e iluminação. Solte cada slider para aplicar a alteração.
-
-O preset de swell preserva seus ajustes de cores, espuma, reflexos e os demais grupos. Ativa o efeito geral e o novo modo de ondas. Não ativa nem desativa o ajuste separado de vento dos ripples.
-
-Compilar um arquivo avulso aberto do ZIP não atualiza o projeto. Não deixe uma segunda cópia de `Mod.cs` ou um backup `.cs` na pasta compilada. Esta versão não exige dependências novas, um AssetBundle ou recompilar um shader. Mantenha a referência `Colossal.Localization` que resolveu o CS0012 anteriormente.
-
-## Como comparar as três escalas
-
-Comece pelo preset de swell, sem alterar os outros grupos. Esses números são um ponto de partida experimental, não uma calibração visual do seu mapa.
-
-1. **Identificar a banda longa:** mantenha a força longa em 85 e reduza temporariamente a secundária a 0. Observe a superfície a uma distância suficiente para enxergar ondulações amplas.
-2. **Comparar amplitude:** alterne a força longa entre 0 e 85. Se não houver diferença, registre o diagnóstico antes de aumentar todos os valores.
-3. **Repor detalhe médio:** traga a secundária para 25–40. Isso permite procurar uma hierarquia visual entre ondulação ampla e detalhe intermediário.
-4. **Ajustar escala e energia:** compare domínio de 1000, 1500 e 2000 m; depois vento de 30, 45 e 60 km/h, um controle por vez. O efeito não é linear. Mudar o espectro pode causar uma transição visual abrupta enquanto ele é regenerado.
-5. **Ajustar organização:** compare irregularidade 20 e 60. Valores menores favorecem a direção do vento que já existe; não há um novo seletor de direção nesta versão.
-
-Os ripples mantêm o comportamento anterior. Se quiser reduzi-los, use a ativação separada de vento das ondulações finas na mesma guia. Esse controle ainda é relativo ao vento original e não modifica diretamente a amplitude dos ripples.
-
-Mudar o vento gerador também pode alterar a espuma produzida, mesmo sem mexer nos sliders de espuma. Compare primeiro o movimento e depois reajuste a cobertura, se necessário.
-
-## Disponibilidade e limites
-
-O novo modo exige uma superfície classificada pela engine como `OceanSeaLake` ou `Ocean`, além dos campos de domínio, vento e ambas as amplitudes. `largeChaos` é opcional: se faltar, somente seu slider fica indisponível. O controlador não converte superfícies `River` ou `Pool` em oceano.
-
-A classificação é da **superfície da engine**, não de regiões geográficas do mapa. Se o CS2 representar mar, lagos e trechos de rios em uma única superfície oceânica, o ajuste se aplica a toda essa superfície. Esta versão não possui uma máscara para selecionar apenas o mar.
-
-A linha **Superfícies compatíveis com swell** informa a quantidade encontrada. Carregue uma cidade antes de testar; se mostrar zero, o modo fica indisponível. A existência dos campos permite aplicar os parâmetros, mas não comprova que o shader personalizado do CS2 os usa integralmente.
-
-O mod não altera a simulação hidrológica, não implementa rebentação costeira e não adiciona balanço físico dos barcos. A forma renderizada depende do material e da geometria que o jogo fornece. Não houve medição de desempenho no CS2. A implementação reutiliza as bandas existentes; isso não equivale a uma garantia de custo de renderização idêntico.
-
-## Interação com os controles anteriores
-
-- Com swell ativo, os antigos sliders **Ondas grandes — multiplicador** e **Ondas médias — multiplicador** ficam cinza. Os controles novos passam a comandar esses mesmos campos nativos, evitando dois escritores concorrentes.
-- Ao desligar swell, o domínio, o vento gerador e a irregularidade anteriores são restaurados. Se o antigo grupo de amplitude estiver ativado, seus multiplicadores relativos voltam a valer; caso contrário, as amplitudes nativas são restauradas.
-- Enquanto swell estiver ativo, o modo antigo de amplitude também fica suspenso nas superfícies não oceânicas. Nelas o mod devolve as amplitudes anteriores.
-- **Aplicar ajustes (comparação A/B)** desliga ou religa os grupos selecionados sem apagar os sliders. A restauração usa os valores capturados na ativação e preserva uma escrita externa mais recente quando consegue identificá-la.
-- **Usar valores do jogo** desliga também o modo swell. Os presets **equilibrado** e **somente espuma** redefinem as configurações e deixam swell desligado; não são necessários para testar esta atualização.
-
-As configurações continuam globais para o mod, no mesmo arquivo `ModsSettings/SimpleWaterFoam/FoamSettings`. Valores salvos anteriormente prevalecem nos controles existentes. Evite dois mods ajustando os mesmos campos ao mesmo tempo, pois os controladores ativos podem disputar os valores.
-
-## Animação e controles retirados do painel
-
-A correção da 1.2.1 permanece: o mod **não escreve em `timeMultiplier`**. Não captura nem reaplica uma pausa e não força velocidade positiva. O jogo continua responsável por pausar, retomar e mudar o ritmo da animação.
-
-Os controles **Height scattering**, **Displacement scattering**, **Wave-tip lighting** e velocidade da animação foram retirados do painel e continuam sem escrita. Seus valores salvos são preservados em propriedades ocultas para compatibilidade. Os três primeiros foram suspensos após seu teste sem efeito visual; isso não prova ausência do recurso no HDRP em geral.
-
-Há 30 sliders nas seis guias; os quatro suspensos não são mais exibidos. Disponibilidade depende do campo, da superfície e do grupo selecionado. Consulte `CONTROLES.md` para o mapeamento completo.
-
-| Guia | Ajustes |
+| Guia | O que você pode ajustar |
 | --- | --- |
-| Geral | Ativação A/B, presets gerais, estado e diagnóstico |
-| Água | Absorção, refração, RGB e contribuições de luz |
-| Reflexos | Suavidade próxima/distante e transição |
-| Ondas | Amplitudes anteriores, vento dos ripples e novo grupo Swell com preset próprio |
-| Espuma | Quantidade, independência do vento, rugosidade, textura e persistência |
-| Cáusticas | Ativação, intensidade, mistura vertical e projeção |
+| **Geral** | Ligar os ajustes, comparar com a água original, aplicar presets e registrar diagnóstico. |
+| **Água** | Distância de absorção, distância máxima de refração, cores RGB de transmissão e dispersão, luz ambiente e luz no corpo das ondas. Aumente a distância de absorção para enxergar mais fundo onde o leito está visível. |
+| **Reflexos** | Suavidade próxima e distante, início e comprimento da transição entre elas. Uma suavidade maior concentra o brilho da superfície. |
+| **Ondas** | Força das duas bandas, escala, vento e direção do Swell, multiplicadores nativos de amplitude, vento das ondulações finas e perda de detalhe com a distância da câmera. |
+| **Espuma** | Quantidade, independência do vento, rugosidade e repetição da textura. A quantidade controla a cobertura das manchas. Aumente a repetição para obter detalhes menores dentro delas. |
+| **Cáusticas** | Ativação, intensidade, transição vertical, distância de projeção e banda que forma os padrões de luz no fundo. Compare os resultados em água rasa, com o leito visível. |
+
+### Ondas longas, médias e finas
+
+O **Swell** permite regular a força das duas bandas separadamente. A banda longa produz ondulações amplas. A secundária acrescenta detalhe de escala média sobre elas. Os *ripples* são as ondulações mais finas.
+
+| Controle de Swell | Faixa | Valor inicial |
+| --- | --- | --- |
+| Escala do domínio oceânico | 250–5.000 m | 1.500 m |
+| Vento gerador da ondulação | 0–100 km/h | 45 km/h |
+| Força da banda longa | 0–200% | 85% |
+| Força da banda secundária | 0–200% | 40% |
+| Irregularidade da ondulação | 0–100 | 40 |
+| Direção do Swell | 0–360° em relação ao eixo X do mapa | Direção do jogo. O slider começa em 0° e atua ao ligar **Ajustar direção do Swell**. |
+
+Para reconhecer cada escala, aplique o preset e leve a banda secundária a **0%**. Alterne a longa entre **0% e 100%**. Em seguida, mantenha a longa em **85%** e traga a secundária de volta a **40%**. Para observar a direção, diminua a irregularidade e compare **0° e 90°**, usando um cais como referência.
+
+A escala do domínio define o tamanho da região em que o padrão de ondas se repete. A distância entre cristas e a altura visível dependem também do vento e da combinação das bandas. No Swell, **100%** atribui multiplicador **1,0** à banda e pode reativar uma banda com força original zero.
+
+**Usar amplitudes nativas** troca para o outro modo. Nele, os controles de ondas grandes e médias multiplicam a amplitude original de cada superfície. **100%** conserva essa amplitude, **150%** aplica 1,5 vez o valor original e uma base zero continua em zero. **Retomar Swell salvo** recupera seus ajustes de Swell sem reaplicar o preset.
+
+O Swell exige uma superfície identificada como `OceanSeaLake` ou `Ocean` e os campos necessários do espectro. Confira **Superfícies compatíveis com swell** na guia Ondas. Uma mesma superfície pode abranger várias regiões do mapa. Piscinas ficam fora dos ajustes do mod.
+
+### Ripples por distância e cobertura da espuma
+
+Em **Ondas → Ondulações finas por distância**, ligue **Ajustar visibilidade dos ripples**. **Início do fade** aceita 0–5.000 m e **Comprimento do fade** aceita 5–10.000 m. Com os valores iniciais de **50 m** e **200 m**, a transição vai de **50 m a 250 m da câmera**. Para comparar, observe um mesmo trecho a cerca de 100 m e alterne o início entre **0 m e 1.000 m**, com comprimento de **5 m**. O que se procura é a variação no detalhe fino da superfície.
+
+Esse ajuste depende de ripples ativos e funciona independentemente do ajuste de vento. Para mudar o vento dos ripples, ative **Ajustar amplitude das ondas** e **Ajustar vento das ondulações finas (experimental)**. O multiplicador de agitação fina usa o vento original como base.
+
+A cobertura das cristas brancas é controlada em **Espuma**. **Independência do vento** em **0** preserva a resposta nativa ao vento. Em **100**, remove a atenuação dessa curva. A persistência temporal da espuma ficou oculta na 1.4.1 porque seu efeito visual não foi confirmado. Esperar a simulação avançar, com a câmera parada, não testa o fade por distância.
+
+### Cáusticas
+
+Ligue **Ajustar cáusticas** e **Cáusticas ligadas**. Em uma superfície oceânica, **Banda das cáusticas** permite escolher **Longa**, **Secundária** ou **Ripples** para formar o padrão de luz. A opção **Jogo** devolve a escolha à superfície. Se a banda selecionada estiver inativa, o mod libera esse ajuste.
+
+## Presets e restauração
+
+- **Aplicar ajustes (comparação A/B)** alterna entre os grupos escolhidos e os valores que o mod encontrou ao ativá-los. Use esse interruptor para comparar sem perder o perfil.
+- **Usar valores do jogo** desativa os grupos e mantém os valores dos sliders para uso posterior.
+- **Somente espuma (padrão)** redefine os sliders e ativa apenas o ajuste de espuma.
+- **Preset inicial equilibrado** também redefine os sliders. Ativa óptica, cores, suavidade, amplitudes nativas e aparência da espuma, com quantidade e independência do vento em **30**.
+- **Preset: ondulação longa** aplica os cinco valores de Swell da tabela relativos ao domínio, vento, duas bandas e irregularidade. **Retomar Swell salvo** é a opção para voltar aos valores que você personalizou.
+
+## Compilar e atualizar no Windows
+
+1. Com a toolchain oficial de modding instalada, feche o jogo e abra **WaterFeaturesPlus.sln** no Visual Studio.
+2. Selecione **Release** e execute **Build → Rebuild Solution**. O ponto de entrada fica em `WaterFeaturesPlus/Mod.cs` e os demais arquivos de execução, configurações e idioma ficam em `WaterFeaturesPlus/src/`. A solução inclui a referência a `Colossal.Localization`.
+3. Na instalação padrão, a compilação local implanta a DLL em `%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Mods\WaterFeaturesPlus\WaterFeaturesPlus.dll`. Abra o jogo e confira **Opções → Water Features Plus**.
+
+Se você usava o **Simple Water Foam**, mova a instalação local antiga de `Mods\SimpleWaterFoam` para fora de `Mods` antes de iniciar a nova. Mantenha as preferências em `ModsSettings/SimpleWaterFoam/FoamSettings`. O nome antigo nesse caminho é intencional e permite reaproveitar os valores de espuma, Swell e dos demais grupos.
 
 ## Diagnóstico
 
-Arquivo esperado:
+O carregamento desta versão aparece como `WaterFeaturesPlus 1.4.1 loaded` no log do mod.
 
 ```text
-%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Logs\SimpleWaterFoam.log
+%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Logs\WaterFeaturesPlus.log
 ```
 
-Identificador desta atualização:
+Para investigar um controle, selecione **Geral → Registrar diagnóstico no log** e volte à cidade por cerca de 20 segundos. O mod registra uma leitura imediata e outras duas após aproximadamente **5 e 15 segundos**.
 
-```text
-SimpleWaterFoam 1.3.1: native water controls
-```
-
-A versão do assembly ainda depende do seu `.csproj`; use essa linha para conferir o código efetivamente carregado.
-
-Em **Geral → Registrar diagnóstico no log**, o mod registra a leitura atual e agenda mais duas amostras após 5 e aproximadamente 15 segundos. Retorne à cidade e deixe rodar por pelo menos 20 segundos.
-
-| Entrada | O que informa |
+| Entrada | O que conferir |
 | --- | --- |
-| `API` | Campo encontrado, ausente ou suspenso |
-| `BOUND` | Superfície, tipo e quantidade de campos disponíveis |
-| `SWELL` | Quantidade de superfícies compatíveis e disponibilidade da API |
-| `WAVE_STATE` | Tipo, geometria, domínio, vento, amplitudes e redução por distância da banda longa |
-| `WAVE_OUTPUT` | Número de bandas, domínios e amplitudes enviados à simulação, se essas estruturas estiverem expostas |
-| `OBSERVE` | Leitura dos campos suspensos, incluindo o relógio; não altera seus valores |
-| `Disabled control` | Um campo falhou e foi isolado |
-| `Controller stopped` | Falha mais ampla interrompeu os ajustes e tentou restaurar os valores |
+| `BOUND` e `SWELL` | Superfícies descobertas e disponibilidade dos campos necessários ao Swell. |
+| `API` | Campos disponíveis, ausentes ou suspensos. |
+| `WAVE_STATE` | Domínio, vento, força das bandas, direção, estado dos ripples, distâncias de fade e banda das cáusticas. |
+| `WAVE_OUTPUT` | Bandas ativas, escalas e multiplicadores que o runtime permite consultar. |
+| `OBSERVE` | Leitura dos campos suspensos, incluindo persistência, dispersão por altura e deslocamento, luz nas cristas e relógio da animação. O jogo controla a pausa, a retomada e a velocidade. |
 
-Se `WAVE_OUTPUT` mostrar `not exposed` ou valores vazios, a estrutura interna não pôde ser lida; isso sozinho não significa que a simulação parou. Se o campo mudar em `WAVE_STATE` mas não houver diferença visual, a próxima investigação deve ser o caminho de renderização, as máscaras e o fade nativos. Não basta aumentar o limite dos sliders.
+Um valor diferente no log confirma a alteração do parâmetro. Para avaliar o efeito do material, compare imagens com a mesma câmera e iluminação, mudando um controle por vez. Ao relatar um problema, inclua a versão do jogo, os grupos ativos e as entradas de diagnóstico relevantes.
 
-## Validação realizada
+## Validação e referências
 
-O `Mod.cs` foi compilado em C# com tipos substitutos e passou por **81 verificações automatizadas de lógica**: 51 do controlador existente e 30 do modo swell e da alternância entre modos. Houve também um teste separado de pausa, retomada e mudança de velocidade. Os testes cobrem ativação a partir de amplitude zero, alternância entre modos sem acumular multiplicadores, restauração, tipo de superfície, API ausente, limites e preservação dos demais ajustes.
+A versão 1.4.1 passou em **100 verificações automatizadas** com tipos substitutos de Unity e CS2, além de um teste de pausa e retomada. A suíte cobre, entre outros pontos, limites dos controles, troca de bandas, restauração dos valores e localização da interface. A aparência e o desempenho no jogo precisam ser avaliados em uma cidade carregada.
 
-Esses testes não usam as DLLs proprietárias do jogo. Não validam a interface e serialização reais, o espectro renderizado, o resultado visual ou o FPS. O Swell da versão 1.3.0 foi confirmado por você. A 1.3.1 preserva esse controlador; a limpeza e os novos botões precisam ser conferidos no jogo. Faça a primeira comparação sem outro mod escrevendo nos mesmos parâmetros.
+A implementação usa o HDRP como referência para interpretar os campos da água. O material fornecido pelo CS2 determina o resultado renderizado. [Propriedades da água no HDRP 14](https://docs.unity.cn/Packages/com.unity.render-pipelines.high-definition@14.0/manual/WaterSystem-Properties.html) · [WaterSurface.cs](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/WaterSurface.cs) · [Sistema de água](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.cs) · [Atualização da simulação](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.Simulation.cs)
 
-Para voltar ao pacote 1.3.0, desligue swell e feche o jogo, restaure o `Mod.cs` anterior e recompile o mesmo projeto. Os dois modos usam a mesma identidade de configurações; os campos existentes mantêm seus nomes.
-
-## Referências técnicas
-
-- [Unity HDRP 14 — propriedades da água](https://docs.unity.cn/Packages/com.unity.render-pipelines.high-definition@14.0/manual/WaterSystem-Properties.html): bandas, domínio, vento e amplitudes. É referência upstream, não prova de compatibilidade do binário do CS2.
-- [WaterSurface.cs, branch 2022.3](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/WaterSurface.cs): definição dos campos nativos.
-- [HDRenderPipeline.WaterSystem.cs](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.cs): composição dos parâmetros do espectro e das bandas.
-- [HDRenderPipeline.WaterSystem.Simulation.cs](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.Simulation.cs): atualização da simulação e do relógio.
-
-Referências usadas anteriormente para os exemplos de opções/modding: [WaterVisualTweaks](https://github.com/HX2003/WaterVisualTweaks), [TrafficToolEssentials](https://github.com/ZessonsDE/TrafficToolEssentials/blob/main/TrafficToolEssentials/Settings.cs), [AreaBucket](https://github.com/Cmyna/AreaBucket/blob/master/Setting.cs) e [CS2MultiplayerMod](https://github.com/Rollocraft/CS2MultiplayerMod/blob/master/CS2MultiplayerMod/Setting.cs). Elas não são dependências que você precise instalar ou referenciar no projeto.
+Os projetos consultados para exemplos de água e de interface são referências de desenvolvimento. A instalação do mod dispensa esses projetos. [WaterVisualTweaks](https://github.com/HX2003/WaterVisualTweaks) · [TrafficToolEssentials](https://github.com/ZessonsDE/TrafficToolEssentials/blob/main/TrafficToolEssentials/Settings.cs) · [AreaBucket](https://github.com/Cmyna/AreaBucket/blob/master/Setting.cs) · [CS2MultiplayerMod](https://github.com/Rollocraft/CS2MultiplayerMod/blob/master/CS2MultiplayerMod/Setting.cs)
