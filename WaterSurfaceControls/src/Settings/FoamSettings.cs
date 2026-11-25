@@ -14,7 +14,7 @@ namespace WaterSurfaceControls
         Ripples = 3
     }
 
-    // Keep the original settings path for upgrades from Simple Water Foam.
+    // Keep the original settings path for upgrades from Water Surface Controls.
     [FileLocation("ModsSettings/WaterSurfaceControls/FoamSettings")]
     [SettingsUITabOrder("General", "Water", "Reflections", "Waves", "Foam", "Caustics")]
     [SettingsUIGroupOrder("Global", "Presets", "Diagnostics", "Optics", "Transmission", "ScatterColor", "Light", "Surface", "Motion", "Swell", "RippleFade", "Coverage", "Texture", "CausticControls")]
