@@ -2,8 +2,8 @@
 
 	<PropertyGroup>
 		<Configurations>Debug;Release</Configurations>
-		<AssemblyName>WaterFeaturesPlus</AssemblyName>
-		<RootNamespace>WaterFeaturesPlus</RootNamespace>
+		<AssemblyName>WaterSurfaceControls</AssemblyName>
+		<RootNamespace>WaterSurfaceControls</RootNamespace>
 		<Version>1.4.1</Version>
 	
 		<!--The file where mod information which is required for publishing mod on PDX mods are stored-->

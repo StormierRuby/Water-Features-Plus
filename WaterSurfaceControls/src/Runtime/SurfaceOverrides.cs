@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace WaterFeaturesPlus
+namespace WaterSurfaceControls
 {
     // Independent of the scene: each binding owns only the fields it actually writes.
     internal sealed class WaterBinding

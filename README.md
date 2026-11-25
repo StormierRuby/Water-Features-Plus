@@ -1,4 +1,4 @@
-# Water Features Plus
+# Water Surface Controls
 
 Tune whitecap coverage, layer medium waves over a long swell, and adjust how water reflects and scatters light in **Cities: Skylines II**. The mod uses the game's native water surface. Its settings are visual and apply across the cities you load.
 
@@ -8,7 +8,7 @@ Tune whitecap coverage, layer medium waves over a long swell, and adjust how wat
 
 ## Getting started
 
-1. Load a city, point the camera across a stretch of open water, and open **Options → Water Features Plus**.
+1. Load a city, point the camera across a stretch of open water, and open **Options → Water Surface Controls**.
 2. Open **Foam**, move **Foam amount**, and release the slider to apply the change. A new profile adjusts only foam, with **Foam amount** at **40** and **Wind independence** at **100**.
 3. To try larger waves, open **Waves → Ocean swell** and select **Preset: long swell**. It sets the strength of both wave bands, the patch size, the wind speed, and the irregularity. Your foam, color, and reflection settings carry over.
 4. To compare the same view with the game's water, switch **General → Apply adjustments (A/B comparison)** off and back on. Your slider values are saved.
@@ -69,18 +69,18 @@ Turn on **Override caustics** and **Enable caustics**. On an ocean surface, **So
 
 ## Building and upgrading on Windows
 
-1. With the official modding toolchain installed, close the game and open **WaterFeaturesPlus.sln** in Visual Studio.
-2. Select **Release**, then **Build → Rebuild Solution**. The entry point is `WaterFeaturesPlus/Mod.cs`. The runtime, settings, and localization files are in `WaterFeaturesPlus/src/`. The project includes the `Colossal.Localization` reference.
-3. With the default installation, the build deploys the DLL to `%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Mods\WaterFeaturesPlus\WaterFeaturesPlus.dll`. Start the game and open **Options → Water Features Plus**.
+1. With the official modding toolchain installed, close the game and open **WaterSurfaceControls.sln** in Visual Studio.
+2. Select **Release**, then **Build → Rebuild Solution**. The entry point is `WaterSurfaceControls/Mod.cs`. The runtime, settings, and localization files are in `WaterSurfaceControls/src/`. The project includes the `Colossal.Localization` reference.
+3. With the default installation, the build deploys the DLL to `%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Mods\WaterSurfaceControls\WaterSurfaceControls.dll`. Start the game and open **Options → Water Surface Controls Plus**.
 
-If you previously used **Simple Water Foam**, move its old local installation from `Mods\SimpleWaterFoam` to a folder outside `Mods` before starting the new version. Keep your preferences at `ModsSettings/SimpleWaterFoam/FoamSettings`. Water Features Plus still reads that path so you can reuse your foam, swell, and other settings.
+If you previously used **Simple Water Foam**, move its old local installation from `Mods\SimpleWaterFoam` to a folder outside `Mods` before starting the new version. Keep your preferences at `ModsSettings/SimpleWaterFoam/FoamSettings`. Water Surface Controls Plus still reads that path so you can reuse your foam, swell, and other settings.
 
 ## Diagnostics
 
-A successful startup writes `WaterFeaturesPlus 1.4.1 loaded` to the mod log.
+A successful startup writes `WaterSurfaceControls 1.4.1 loaded` to the mod log.
 
 ```text
-%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Logs\WaterFeaturesPlus.log
+%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Logs\WaterSurfaceControls.log
 ```
 
 To investigate a control, select **General → Write diagnostics to log** and return to your city for about 20 seconds. The mod takes one reading immediately and two more after approximately **5 and 15 seconds**.
@@ -101,4 +101,4 @@ Version 1.4.1 passed **100 automated checks** using test doubles for Unity and C
 
 The implementation uses Unity HDRP as a reference for interpreting water fields. Cities: Skylines II supplies the material that renders the surface. [HDRP 14 water properties](https://docs.unity.cn/Packages/com.unity.render-pipelines.high-definition@14.0/manual/WaterSystem-Properties.html) · [WaterSurface.cs](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/WaterSurface.cs) · [Water system](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.cs) · [Simulation update](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.Simulation.cs)
 
-These projects provided examples of water controls and settings interfaces during development. Water Features Plus runs independently of them. [WaterVisualTweaks](https://github.com/HX2003/WaterVisualTweaks) · [TrafficToolEssentials](https://github.com/ZessonsDE/TrafficToolEssentials/blob/main/TrafficToolEssentials/Settings.cs) · [AreaBucket](https://github.com/Cmyna/AreaBucket/blob/master/Setting.cs) · [CS2MultiplayerMod](https://github.com/Rollocraft/CS2MultiplayerMod/blob/master/CS2MultiplayerMod/Setting.cs)
+These projects provided examples of water controls and settings interfaces during development. Water Surface Controls Plus runs independently of them. [WaterVisualTweaks](https://github.com/HX2003/WaterVisualTweaks) · [TrafficToolEssentials](https://github.com/ZessonsDE/TrafficToolEssentials/blob/main/TrafficToolEssentials/Settings.cs) · [AreaBucket](https://github.com/Cmyna/AreaBucket/blob/master/Setting.cs) · [CS2MultiplayerMod](https://github.com/Rollocraft/CS2MultiplayerMod/blob/master/CS2MultiplayerMod/Setting.cs)

@@ -1,4 +1,4 @@
-# Water Features Plus
+# Water Surface Controls
 
 Ajuste a espuma, combine ondas longas e médias e controle como a água de **Cities: Skylines II** responde à luz. O mod usa a superfície de água nativa do jogo. Os ajustes são visuais e se aplicam às cidades que você carregar.
 
@@ -6,7 +6,7 @@ Ajuste a espuma, combine ondas longas e médias e controle como a água de **Cit
 
 ## Primeiros ajustes
 
-1. Carregue uma cidade e posicione a câmera de frente para um trecho de água aberta. Abra **Opções → Water Features Plus**.
+1. Carregue uma cidade e posicione a câmera de frente para um trecho de água aberta. Abra **Opções → Water Surface Controls**.
 2. Na guia **Espuma**, mova **Quantidade de espuma** e solte o controle para aplicar. Em um perfil novo, somente a espuma vem ajustada, com quantidade **40** e independência do vento **100**.
 3. Para experimentar ondas maiores, abra **Ondas → Ondas longas / Swell** e clique em **Preset: ondulação longa**. O preset ajusta as duas bandas, o domínio, o vento e a irregularidade. Os ajustes de espuma, cor e reflexos são preservados.
 4. Para comparar o resultado no mesmo enquadramento, desligue e religue **Geral → Aplicar ajustes (comparação A/B)**. Os valores dos sliders ficam salvos.
@@ -67,18 +67,18 @@ Ligue **Ajustar cáusticas** e **Cáusticas ligadas**. Em uma superfície oceân
 
 ## Compilar e atualizar no Windows
 
-1. Com a toolchain oficial de modding instalada, feche o jogo e abra **WaterFeaturesPlus.sln** no Visual Studio.
-2. Selecione **Release** e execute **Build → Rebuild Solution**. O ponto de entrada fica em `WaterFeaturesPlus/Mod.cs` e os demais arquivos de execução, configurações e idioma ficam em `WaterFeaturesPlus/src/`. A solução inclui a referência a `Colossal.Localization`.
-3. Na instalação padrão, a compilação local implanta a DLL em `%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Mods\WaterFeaturesPlus\WaterFeaturesPlus.dll`. Abra o jogo e confira **Opções → Water Features Plus**.
+1. Com a toolchain oficial de modding instalada, feche o jogo e abra **WaterSurfaceControls.sln** no Visual Studio.
+2. Selecione **Release** e execute **Build → Rebuild Solution**. O ponto de entrada fica em `WaterSurfaceControls/Mod.cs` e os demais arquivos de execução, configurações e idioma ficam em `WaterSurfaceControls/src/`. A solução inclui a referência a `Colossal.Localization`.
+3. Na instalação padrão, a compilação local implanta a DLL em `%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Mods\WaterSurfaceControls\WaterSurfaceControls.dll`. Abra o jogo e confira **Opções → Water Surface Controls**.
 
 Se você usava o **Simple Water Foam**, mova a instalação local antiga de `Mods\SimpleWaterFoam` para fora de `Mods` antes de iniciar a nova. Mantenha as preferências em `ModsSettings/SimpleWaterFoam/FoamSettings`. O nome antigo nesse caminho é intencional e permite reaproveitar os valores de espuma, Swell e dos demais grupos.
 
 ## Diagnóstico
 
-O carregamento desta versão aparece como `WaterFeaturesPlus 1.4.1 loaded` no log do mod.
+O carregamento desta versão aparece como `WaterSurfaceControls 1.4.1 loaded` no log do mod.
 
 ```text
-%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Logs\WaterFeaturesPlus.log
+%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Logs\WaterSurfaceControls.log
 ```
 
 Para investigar um controle, selecione **Geral → Registrar diagnóstico no log** e volte à cidade por cerca de 20 segundos. O mod registra uma leitura imediata e outras duas após aproximadamente **5 e 15 segundos**.
