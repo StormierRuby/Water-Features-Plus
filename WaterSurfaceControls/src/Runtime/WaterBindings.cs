@@ -6,8 +6,8 @@ namespace WaterSurfaceControls
 {
     public sealed partial class WaterController
     {
-        private WaterBinding Add(string key, Type type, Func<FoamSettings, bool> active,
-            Func<FoamSettings, object, object> value, params string[] names)
+        private WaterBinding Add(string key, Type type, Func<WaterSurfaceSettings, bool> active,
+            Func<WaterSurfaceSettings, object, object> value, params string[] names)
         {
             FieldInfo field = null;
             if (surfaceType != null)

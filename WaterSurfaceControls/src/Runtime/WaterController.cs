@@ -10,7 +10,7 @@ namespace WaterSurfaceControls
     public sealed partial class WaterController : MonoBehaviour
     {
         private const BindingFlags FieldFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-        private FoamSettings settings;
+        private WaterSurfaceSettings settings;
         private Type surfaceType;
         private FieldInfo registry;
         private FieldInfo surfaceKind;
@@ -108,7 +108,7 @@ namespace WaterSurfaceControls
         }
 
         // Surface kind, ripple state and the selected band may change while the city runs.
-        private SurfaceFeatures GetFeatures(FoamSettings options, object surface)
+        private SurfaceFeatures GetFeatures(WaterSurfaceSettings options, object surface)
         {
             var features = new SurfaceFeatures();
             if (!options.EnableEffect)
@@ -149,7 +149,7 @@ namespace WaterSurfaceControls
                 return "v" + Mod.Version + " | API " + count + "/" + bindings.Count + " | surfaces " + surfaces.Count + " | " + (running ? "ready" : "stopped");
             }
         }
-        internal void Initialize(FoamSettings options)
+        internal void Initialize(WaterSurfaceSettings options)
         {
             settings = options;
             foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies())
