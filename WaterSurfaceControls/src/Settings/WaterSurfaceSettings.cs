@@ -14,18 +14,20 @@ namespace WaterSurfaceControls
         Ripples = 3
     }
 
-    // Keep the original settings path for upgrades from Water Surface Controls.
-    [FileLocation("ModsSettings/WaterSurfaceControls/FoamSettings")]
+    [FileLocation("ModsSettings/WaterSurfaceControls/" + WaterSurfaceSettings.SettingsAssetName)]
     [SettingsUITabOrder("General", "Water", "Reflections", "Waves", "Foam", "Caustics")]
-    [SettingsUIGroupOrder("Global", "Presets", "Diagnostics", "Optics", "Transmission", "ScatterColor", "Light", "Surface", "Motion", "Swell", "RippleFade", "Coverage", "Texture", "CausticControls")]
-    [SettingsUIShowGroupName("Global", "Presets", "Diagnostics", "Optics", "Transmission", "ScatterColor", "Light", "Surface", "Motion", "Swell", "RippleFade", "Coverage", "Texture", "CausticControls")]
-    public sealed class FoamSettings : ModSetting
+    [SettingsUIGroupOrder("Global", "PersonalPresets", "Presets", "Diagnostics", "Optics", "Transmission", "ScatterColor", "Light", "Surface", "Motion", "Swell", "RippleFade", "Coverage", "Texture", "CausticControls")]
+    [SettingsUIShowGroupName("Global", "PersonalPresets", "Presets", "Diagnostics", "Optics", "Transmission", "ScatterColor", "Light", "Surface", "Motion", "Swell", "RippleFade", "Coverage", "Texture", "CausticControls")]
+    public sealed class WaterSurfaceSettings : ModSetting
     {
+        // Used by existing installations for both the settings file and its asset key.
+        internal const string SettingsAssetName = "FoamSettings";
+
         internal int Revision
         {
             get; private set;
         }
-        public FoamSettings(IMod mod) : base(mod) { SetDefaults(); }
+        public WaterSurfaceSettings(IMod mod) : base(mod) { SetDefaults(); }
         private static int Limit(int v, int lo, int hi)
         {
             return Math.Max(lo, Math.Min(hi, v));
@@ -55,7 +57,7 @@ namespace WaterSurfaceControls
 
         private bool _OpticsEnabled;
         [SettingsUISection("Water", "Optics")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledOpticsEnabled))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledOpticsEnabled))]
         public bool OpticsEnabled
         {
             get => _OpticsEnabled;
@@ -69,7 +71,7 @@ namespace WaterSurfaceControls
         private float _Absorption;
         [SettingsUISection("Water", "Optics")]
         [SettingsUISlider(min = 0.5f, max = 100.0f, step = 0.5f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction, updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledAbsorption))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledAbsorption))]
         public float Absorption
         {
             get => _Absorption;
@@ -83,7 +85,7 @@ namespace WaterSurfaceControls
         private float _RefractionDistance;
         [SettingsUISection("Water", "Optics")]
         [SettingsUISlider(min = 0.1f, max = 5.0f, step = 0.1f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction, updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRefractionDistance))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledRefractionDistance))]
         public float RefractionDistance
         {
             get => _RefractionDistance;
@@ -96,7 +98,7 @@ namespace WaterSurfaceControls
 
         private bool _RefractionColorEnabled;
         [SettingsUISection("Water", "Transmission")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRefractionColorEnabled))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledRefractionColorEnabled))]
         public bool RefractionColorEnabled
         {
             get => _RefractionColorEnabled;
@@ -110,7 +112,7 @@ namespace WaterSurfaceControls
         private int _RefractionR;
         [SettingsUISection("Water", "Transmission")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRefractionR))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledRefractionR))]
         public int RefractionR
         {
             get => _RefractionR;
@@ -124,7 +126,7 @@ namespace WaterSurfaceControls
         private int _RefractionG;
         [SettingsUISection("Water", "Transmission")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRefractionG))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledRefractionG))]
         public int RefractionG
         {
             get => _RefractionG;
@@ -138,7 +140,7 @@ namespace WaterSurfaceControls
         private int _RefractionB;
         [SettingsUISection("Water", "Transmission")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRefractionB))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledRefractionB))]
         public int RefractionB
         {
             get => _RefractionB;
@@ -151,7 +153,7 @@ namespace WaterSurfaceControls
 
         private bool _ScatteringColorEnabled;
         [SettingsUISection("Water", "ScatterColor")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledScatteringColorEnabled))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledScatteringColorEnabled))]
         public bool ScatteringColorEnabled
         {
             get => _ScatteringColorEnabled;
@@ -165,7 +167,7 @@ namespace WaterSurfaceControls
         private int _ScatteringR;
         [SettingsUISection("Water", "ScatterColor")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledScatteringR))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledScatteringR))]
         public int ScatteringR
         {
             get => _ScatteringR;
@@ -179,7 +181,7 @@ namespace WaterSurfaceControls
         private int _ScatteringG;
         [SettingsUISection("Water", "ScatterColor")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledScatteringG))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledScatteringG))]
         public int ScatteringG
         {
             get => _ScatteringG;
@@ -193,7 +195,7 @@ namespace WaterSurfaceControls
         private int _ScatteringB;
         [SettingsUISection("Water", "ScatterColor")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledScatteringB))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledScatteringB))]
         public int ScatteringB
         {
             get => _ScatteringB;
@@ -206,7 +208,7 @@ namespace WaterSurfaceControls
 
         private bool _LightingEnabled;
         [SettingsUISection("Water", "Light")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledLightingEnabled))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledLightingEnabled))]
         public bool LightingEnabled
         {
             get => _LightingEnabled;
@@ -220,7 +222,7 @@ namespace WaterSurfaceControls
         private int _Ambient;
         [SettingsUISection("Water", "Light")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledAmbient))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledAmbient))]
         public int Ambient
         {
             get => _Ambient;
@@ -270,7 +272,7 @@ namespace WaterSurfaceControls
         private int _Body;
         [SettingsUISection("Water", "Light")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledBody))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledBody))]
         public int Body
         {
             get => _Body;
@@ -283,7 +285,7 @@ namespace WaterSurfaceControls
 
         private bool _ReflectionEnabled;
         [SettingsUISection("Reflections", "Surface")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledReflectionEnabled))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledReflectionEnabled))]
         public bool ReflectionEnabled
         {
             get => _ReflectionEnabled;
@@ -297,7 +299,7 @@ namespace WaterSurfaceControls
         private int _NearSmoothness;
         [SettingsUISection("Reflections", "Surface")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledNearSmoothness))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledNearSmoothness))]
         public int NearSmoothness
         {
             get => _NearSmoothness;
@@ -311,7 +313,7 @@ namespace WaterSurfaceControls
         private int _FarSmoothness;
         [SettingsUISection("Reflections", "Surface")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledFarSmoothness))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledFarSmoothness))]
         public int FarSmoothness
         {
             get => _FarSmoothness;
@@ -325,7 +327,7 @@ namespace WaterSurfaceControls
         private float _SmoothFadeStart;
         [SettingsUISection("Reflections", "Surface")]
         [SettingsUISlider(min = 0.0f, max = 3000.0f, step = 25.0f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction, updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSmoothFadeStart))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledSmoothFadeStart))]
         public float SmoothFadeStart
         {
             get => _SmoothFadeStart;
@@ -339,7 +341,7 @@ namespace WaterSurfaceControls
         private float _SmoothFadeDistance;
         [SettingsUISection("Reflections", "Surface")]
         [SettingsUISlider(min = 25.0f, max = 4000.0f, step = 25.0f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction, updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSmoothFadeDistance))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledSmoothFadeDistance))]
         public float SmoothFadeDistance
         {
             get => _SmoothFadeDistance;
@@ -352,7 +354,7 @@ namespace WaterSurfaceControls
 
         private bool _WavesEnabled;
         [SettingsUISection("Waves", "Motion")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledWavesEnabled))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledWavesEnabled))]
         public bool WavesEnabled
         {
             get => _WavesEnabled;
@@ -366,7 +368,7 @@ namespace WaterSurfaceControls
         private int _LargeWaves;
         [SettingsUISection("Waves", "Motion")]
         [SettingsUISlider(min = 0.0f, max = 150.0f, step = 5.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledLargeWaves))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledLargeWaves))]
         public int LargeWaves
         {
             get => _LargeWaves;
@@ -380,7 +382,7 @@ namespace WaterSurfaceControls
         private int _MediumWaves;
         [SettingsUISection("Waves", "Motion")]
         [SettingsUISlider(min = 0.0f, max = 150.0f, step = 5.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledMediumWaves))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledMediumWaves))]
         public int MediumWaves
         {
             get => _MediumWaves;
@@ -393,7 +395,7 @@ namespace WaterSurfaceControls
 
         private bool _RippleOverrideEnabled;
         [SettingsUISection("Waves", "Motion")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRippleOverrideEnabled))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledRippleOverrideEnabled))]
         public bool RippleOverrideEnabled
         {
             get => _RippleOverrideEnabled;
@@ -407,7 +409,7 @@ namespace WaterSurfaceControls
         private int _Ripples;
         [SettingsUISection("Waves", "Motion")]
         [SettingsUISlider(min = 0.0f, max = 150.0f, step = 5.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRipples))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledRipples))]
         public int Ripples
         {
             get => _Ripples;
@@ -432,7 +434,7 @@ namespace WaterSurfaceControls
 
         private bool _SwellEnabled;
         [SettingsUISection("Waves", "Swell")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellEnabled))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledSwellEnabled))]
         public bool SwellEnabled
         {
             get => _SwellEnabled;
@@ -446,7 +448,7 @@ namespace WaterSurfaceControls
         private float _SwellPatchSize;
         [SettingsUISection("Waves", "Swell")]
         [SettingsUISlider(min = 250.0f, max = 5000.0f, step = 250.0f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction, updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellPatchSize))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledSwellPatchSize))]
         public float SwellPatchSize
         {
             get => _SwellPatchSize;
@@ -460,7 +462,7 @@ namespace WaterSurfaceControls
         private float _SwellWind;
         [SettingsUISection("Waves", "Swell")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction, updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellWind))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledSwellWind))]
         public float SwellWind
         {
             get => _SwellWind;
@@ -474,7 +476,7 @@ namespace WaterSurfaceControls
         private int _SwellAmplitude;
         [SettingsUISection("Waves", "Swell")]
         [SettingsUISlider(min = 0.0f, max = 200.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellAmplitude))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledSwellAmplitude))]
         public int SwellAmplitude
         {
             get => _SwellAmplitude;
@@ -488,7 +490,7 @@ namespace WaterSurfaceControls
         private int _SwellMediumAmplitude;
         [SettingsUISection("Waves", "Swell")]
         [SettingsUISlider(min = 0.0f, max = 200.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellMediumAmplitude))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledSwellMediumAmplitude))]
         public int SwellMediumAmplitude
         {
             get => _SwellMediumAmplitude;
@@ -502,7 +504,7 @@ namespace WaterSurfaceControls
         private int _SwellChaos;
         [SettingsUISection("Waves", "Swell")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellChaos))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledSwellChaos))]
         public int SwellChaos
         {
             get => _SwellChaos;
@@ -515,7 +517,7 @@ namespace WaterSurfaceControls
 
         private bool _DirectionOverride;
         [SettingsUISection("Waves", "Swell")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledDirectionOverride))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledDirectionOverride))]
         public bool DirectionOverride
         {
             get => _DirectionOverride;
@@ -529,7 +531,7 @@ namespace WaterSurfaceControls
         private int _SwellDirection;
         [SettingsUISection("Waves", "Swell")]
         [SettingsUISlider(min = 0.0f, max = 360.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSwellDirection))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledSwellDirection))]
         public int SwellDirection
         {
             get => _SwellDirection;
@@ -542,7 +544,7 @@ namespace WaterSurfaceControls
 
         private bool _RippleFadeEnabled;
         [SettingsUISection("Waves", "RippleFade")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRippleFadeEnabled))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledRippleFadeEnabled))]
         public bool RippleFadeEnabled
         {
             get => _RippleFadeEnabled;
@@ -556,7 +558,7 @@ namespace WaterSurfaceControls
         private int _RippleFadeStart;
         [SettingsUISection("Waves", "RippleFade")]
         [SettingsUISlider(min = 0.0f, max = 5000.0f, step = 5.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRippleFadeStart))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledRippleFadeStart))]
         public int RippleFadeStart
         {
             get => _RippleFadeStart;
@@ -570,7 +572,7 @@ namespace WaterSurfaceControls
         private int _RippleFadeDistance;
         [SettingsUISection("Waves", "RippleFade")]
         [SettingsUISlider(min = 5.0f, max = 10000.0f, step = 5.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledRippleFadeDistance))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledRippleFadeDistance))]
         public int RippleFadeDistance
         {
             get => _RippleFadeDistance;
@@ -583,7 +585,7 @@ namespace WaterSurfaceControls
 
         private bool _FoamEnabled;
         [SettingsUISection("Foam", "Coverage")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledFoamEnabled))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledFoamEnabled))]
         public bool FoamEnabled
         {
             get => _FoamEnabled;
@@ -597,7 +599,7 @@ namespace WaterSurfaceControls
         private int _Amount;
         [SettingsUISection("Foam", "Coverage")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledAmount))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledAmount))]
         public int Amount
         {
             get => _Amount;
@@ -611,7 +613,7 @@ namespace WaterSurfaceControls
         private int _WindIndependence;
         [SettingsUISection("Foam", "Coverage")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledWindIndependence))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledWindIndependence))]
         public int WindIndependence
         {
             get => _WindIndependence;
@@ -624,7 +626,7 @@ namespace WaterSurfaceControls
 
         private bool _FoamLookEnabled;
         [SettingsUISection("Foam", "Texture")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledFoamLookEnabled))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledFoamLookEnabled))]
         public bool FoamLookEnabled
         {
             get => _FoamLookEnabled;
@@ -638,7 +640,7 @@ namespace WaterSurfaceControls
         private int _FoamRoughness;
         [SettingsUISection("Foam", "Texture")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledFoamRoughness))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledFoamRoughness))]
         public int FoamRoughness
         {
             get => _FoamRoughness;
@@ -652,7 +654,7 @@ namespace WaterSurfaceControls
         private float _FoamTiling;
         [SettingsUISection("Foam", "Texture")]
         [SettingsUISlider(min = 0.1f, max = 2.0f, step = 0.1f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction, updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledFoamTiling))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledFoamTiling))]
         public float FoamTiling
         {
             get => _FoamTiling;
@@ -682,7 +684,7 @@ namespace WaterSurfaceControls
 
         private bool _CausticsOverride;
         [SettingsUISection("Caustics", "CausticControls")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledCausticsOverride))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledCausticsOverride))]
         public bool CausticsOverride
         {
             get => _CausticsOverride;
@@ -695,7 +697,7 @@ namespace WaterSurfaceControls
 
         private bool _CausticsOn;
         [SettingsUISection("Caustics", "CausticControls")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledCausticsOn))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledCausticsOn))]
         public bool CausticsOn
         {
             get => _CausticsOn;
@@ -709,7 +711,7 @@ namespace WaterSurfaceControls
         private int _CausticsIntensity;
         [SettingsUISection("Caustics", "CausticControls")]
         [SettingsUISlider(min = 0.0f, max = 100.0f, step = 1.0f, scalarMultiplier = 1, unit = "integer", updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledCausticsIntensity))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledCausticsIntensity))]
         public int CausticsIntensity
         {
             get => _CausticsIntensity;
@@ -723,7 +725,7 @@ namespace WaterSurfaceControls
         private float _CausticsBlend;
         [SettingsUISection("Caustics", "CausticControls")]
         [SettingsUISlider(min = 0.1f, max = 10.0f, step = 0.1f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction, updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledCausticsBlend))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledCausticsBlend))]
         public float CausticsBlend
         {
             get => _CausticsBlend;
@@ -737,7 +739,7 @@ namespace WaterSurfaceControls
         private float _CausticsProjection;
         [SettingsUISection("Caustics", "CausticControls")]
         [SettingsUISlider(min = 0.5f, max = 15.0f, step = 0.5f, scalarMultiplier = 1, unit = Unit.kFloatSingleFraction, updateOnDragEnd = true)]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledCausticsProjection))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledCausticsProjection))]
         public float CausticsProjection
         {
             get => _CausticsProjection;
@@ -749,7 +751,7 @@ namespace WaterSurfaceControls
         }
         private CausticsSource _SourceBand;
         [SettingsUISection("Caustics", "CausticControls")]
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledSourceBand))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledSourceBand))]
         public CausticsSource SourceBand
         {
             get
@@ -786,7 +788,7 @@ namespace WaterSurfaceControls
                 return Mod.Controller == null ? "Load a city with water" : Mod.Controller.SwellStatus;
             }
         }
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledUseNativeAmplitudes))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledUseNativeAmplitudes))]
         [SettingsUISection("Waves", "Motion")]
         [SettingsUIButton]
         public bool UseNativeAmplitudes
@@ -801,7 +803,7 @@ namespace WaterSurfaceControls
                 ApplyAndSave();
             }
         }
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledOceanSwellPreset))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledOceanSwellPreset))]
         [SettingsUISection("Waves", "Swell")]
         [SettingsUIButton]
         public bool ResumeSavedSwell
@@ -815,7 +817,7 @@ namespace WaterSurfaceControls
                 ApplyAndSave();
             }
         }
-        [SettingsUIDisableByCondition(typeof(FoamSettings), nameof(DisabledOceanSwellPreset))]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(DisabledOceanSwellPreset))]
         [SettingsUISection("Waves", "Swell")]
         [SettingsUIButton]
         public bool OceanSwellPreset
@@ -834,6 +836,97 @@ namespace WaterSurfaceControls
                 ApplyAndSave();
             }
         }
+        [SettingsUISection("General", "PersonalPresets")]
+        public PresetSlot SelectedSlot { get; set; } = PresetSlot.One;
+
+        // Read old profiles on upgrade. New presets are written to individual files.
+        [SettingsUIHidden] public string SavedPresetOne { get; set; } = string.Empty;
+        [SettingsUIHidden] public string SavedPresetTwo { get; set; } = string.Empty;
+        [SettingsUIHidden] public string SavedPresetThree { get; set; } = string.Empty;
+
+        internal void MigrateLegacyPresets()
+        {
+            var files = Mod.Presets;
+            if (files == null)
+                return;
+            bool migrated = false;
+            if (files.Migrate(PresetSlot.One, SavedPresetOne)) { SavedPresetOne = string.Empty; migrated = true; }
+            if (files.Migrate(PresetSlot.Two, SavedPresetTwo)) { SavedPresetTwo = string.Empty; migrated = true; }
+            if (files.Migrate(PresetSlot.Three, SavedPresetThree)) { SavedPresetThree = string.Empty; migrated = true; }
+            if (migrated)
+            {
+                try { ApplyAndSave(); }
+                catch (Exception ex) { Mod.Logger.Warn("Presets exported. Could not save migration state: " + ex.Message); }
+            }
+        }
+
+        public bool CannotSaveNewPreset() => Mod.Presets?.State(SelectedSlot) != PresetFileState.Empty;
+        public bool CannotLoadPreset() => Mod.Presets?.State(SelectedSlot) != PresetFileState.Ready;
+        public bool CannotReplacePreset()
+        {
+            var state = Mod.Presets?.State(SelectedSlot);
+            return state != PresetFileState.Ready && state != PresetFileState.Invalid;
+        }
+
+        [SettingsUISection("General", "PersonalPresets")]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(CannotSaveNewPreset))]
+        [SettingsUIButton]
+        public bool SavePreset
+        {
+            set
+            {
+                if (!CannotSaveNewPreset())
+                    Mod.Presets.Write(SelectedSlot, WaterPreset.Capture(this), false);
+            }
+        }
+
+        [SettingsUISection("General", "PersonalPresets")]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(CannotLoadPreset))]
+        [SettingsUIButton]
+        public bool LoadPreset
+        {
+            set
+            {
+                if (CannotLoadPreset())
+                    return;
+                var preset = Mod.Presets.Read(SelectedSlot);
+                if (preset == null)
+                    return;
+                preset.Apply(this);
+                ApplyAndSave();
+            }
+        }
+
+        [SettingsUISection("General", "PersonalPresets")]
+        [SettingsUIDisableByCondition(typeof(WaterSurfaceSettings), nameof(CannotReplacePreset))]
+        [SettingsUIConfirmation]
+        [SettingsUIButton]
+        public bool ReplacePreset
+        {
+            set
+            {
+                if (!CannotReplacePreset())
+                    Mod.Presets.Write(SelectedSlot, WaterPreset.Capture(this), true);
+            }
+        }
+
+        [SettingsUISection("General", "PersonalPresets")]
+        [SettingsUIButton]
+        public bool OpenPresetFolder
+        {
+            set { Mod.Presets?.OpenFolder(); }
+        }
+
+        [SettingsUISection("General", "PersonalPresets")]
+        [SettingsUIButton]
+        public bool RefreshPresetFiles
+        {
+            set { Mod.Presets?.Refresh(); }
+        }
+
+        [SettingsUISection("General", "PersonalPresets")]
+        public string PresetFileInfo => Mod.Presets?.FileInfoFor(SelectedSlot) ?? string.Empty;
+
         [SettingsUISection("General", "Presets")]
         [SettingsUIButton]
         public bool BalancedPreset
@@ -841,17 +934,63 @@ namespace WaterSurfaceControls
             set
             {
                 SetDefaults();
-                EnableEffect = true;
                 OpticsEnabled = true;
+                Absorption = 13f;
+                RefractionDistance = 1.6f;
+
                 RefractionColorEnabled = true;
+                RefractionR = 6;
+                RefractionG = 37;
+                RefractionB = 34;
+
                 ScatteringColorEnabled = true;
+                ScatteringR = 6;
+                ScatteringG = 29;
+                ScatteringB = 27;
+
+                LightingEnabled = true;
+                Ambient = 38;
+                Body = 34;
+
                 ReflectionEnabled = true;
+                NearSmoothness = 81;
+                FarSmoothness = 90;
+                SmoothFadeStart = 800f;
+                SmoothFadeDistance = 1000f;
+
                 WavesEnabled = true;
+                LargeWaves = 100;
+                MediumWaves = 100;
+                RippleOverrideEnabled = true;
+                Ripples = 100;
+
+                SwellEnabled = true;
+                SwellPatchSize = 1250f;
+                SwellWind = 61f;
+                SwellAmplitude = 153;
+                SwellMediumAmplitude = 59;
+                SwellChaos = 10;
+                DirectionOverride = false;
+                SwellDirection = 283;
+
+                RippleFadeEnabled = true;
+                RippleFadeStart = 50;
+                RippleFadeDistance = 200;
+
+                FoamEnabled = true;
+                Amount = 40;
+                WindIndependence = 100;
                 FoamLookEnabled = true;
-                Amount = 30;
-                WindIndependence = 30;
-                LargeWaves = 90;
-                MediumWaves = 90;
+                FoamRoughness = 65;
+                FoamTiling = 0.2f;
+
+                CausticsOverride = true;
+                CausticsOn = true;
+                CausticsIntensity = 82;
+                CausticsBlend = 1f;
+                CausticsProjection = 5f;
+                SourceBand = CausticsSource.Secondary;
+
                 ApplyAndSave();
             }
         }

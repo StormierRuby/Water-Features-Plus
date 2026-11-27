@@ -11,24 +11,28 @@ namespace WaterSurfaceControls
 {
     public sealed class Mod : IMod
     {
-        internal const string Version = "1.4.1";
+        internal const string Version = "1.5.1";
         internal static readonly ILog Logger = LogManager.GetLogger("WaterSurfaceControls").SetShowsErrorsInUI(false);
         internal static WaterController Controller;
-        private FoamSettings settings;
+        internal static PresetFiles Presets { get; private set; }
+        private WaterSurfaceSettings settings;
         private GameObject host;
         public void OnLoad(UpdateSystem updateSystem)
         {
             try
             {
-                settings = new FoamSettings(this);
-                AssetDatabase.global.LoadSettings(nameof(FoamSettings), settings, new FoamSettings(this));
-                GameManager.instance.localizationManager.AddSource("en-US", new FoamLocale(settings, false));
-                GameManager.instance.localizationManager.AddSource("pt-BR", new FoamLocale(settings, true));
+                settings = new WaterSurfaceSettings(this);
+                AssetDatabase.global.LoadSettings(WaterSurfaceSettings.SettingsAssetName, settings, new WaterSurfaceSettings(this));
+                Presets = new PresetFiles(System.IO.Path.Combine(Application.persistentDataPath, "ModsSettings", "WaterSurfaceControls", "Presets"));
+                Presets.Refresh();
+                GameManager.instance.localizationManager.AddSource("en-US", new WaterSurfaceLocale(settings, false));
+                GameManager.instance.localizationManager.AddSource("pt-BR", new WaterSurfaceLocale(settings, true));
                 host = new GameObject("WaterSurfaceControls.Runtime");
                 Object.DontDestroyOnLoad(host);
                 Controller = host.AddComponent<WaterController>();
                 Controller.Initialize(settings);
                 settings.RegisterInOptionsUI();
+                settings.MigrateLegacyPresets();
                 Logger.Info("WaterSurfaceControls " + Version + " loaded");
             }
             catch (Exception e) { Logger.Error("Initialization failed: " + e); OnDispose(); throw; }
@@ -40,6 +44,7 @@ namespace WaterSurfaceControls
             if (host != null)
                 Object.Destroy(host);
             Controller = null;
+            Presets = null;
             host = null;
             if (settings != null)
                 settings.UnregisterInOptionsUI();

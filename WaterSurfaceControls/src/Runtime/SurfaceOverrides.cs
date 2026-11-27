@@ -9,10 +9,10 @@ namespace WaterSurfaceControls
     {
         internal string Key;
         internal FieldInfo Field;
-        internal Func<FoamSettings, bool> Enabled;
-        internal Func<FoamSettings, object, object> Value;
-        internal Func<FoamSettings, SurfaceFeatures, bool> Eligible;
-        internal Func<FoamSettings, int> ValueRevision;
+        internal Func<WaterSurfaceSettings, bool> Enabled;
+        internal Func<WaterSurfaceSettings, object, object> Value;
+        internal Func<WaterSurfaceSettings, SurfaceFeatures, bool> Eligible;
+        internal Func<WaterSurfaceSettings, int> ValueRevision;
         internal bool Failed;
         internal string SuspendedReason;
         internal bool Supported
@@ -35,7 +35,7 @@ namespace WaterSurfaceControls
             Binding = binding;
         }
 
-        internal void Apply(object target, FoamSettings settings, SurfaceFeatures features)
+        internal void Apply(object target, WaterSurfaceSettings settings, SurfaceFeatures features)
         {
             if (!Binding.Supported || (Binding.Eligible != null && !Binding.Eligible(settings, features)))
             {
@@ -94,7 +94,7 @@ namespace WaterSurfaceControls
                     Slots.Add(new WaterSlot(binding));
         }
 
-        internal void Update(object surface, FoamSettings settings, SurfaceFeatures features)
+        internal void Update(object surface, WaterSurfaceSettings settings, SurfaceFeatures features)
         {
             if (revision != settings.Revision)
             {
