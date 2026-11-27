@@ -2,14 +2,49 @@
 
 Ajuste a espuma, combine ondas longas e médias e controle como a água de **Cities: Skylines II** responde à luz. O mod usa a superfície de água nativa do jogo. Os ajustes são visuais e se aplicam às cidades que você carregar.
 
-**Versão do mod** 1.4.1 · **Versão-alvo do jogo** 1.6.4f1 · **Interface** Português do Brasil e inglês
+**Versão do mod** 1.5.1 · **Versão-alvo do jogo** 1.6.4f1 · **Interface** Português do Brasil e inglês
+
+[Read in English](README.md) · [Guia dos controles](CONTROLES.md)
+
+## Instalação pelo Paradox Mods
+
+Procure **Water Surface Controls** no Paradox Mods, adicione o mod ao conjunto de mods ativo e reinicie o jogo. Depois de carregar uma cidade, abra **Opções → Water Surface Controls**.
 
 ## Primeiros ajustes
 
 1. Carregue uma cidade e posicione a câmera de frente para um trecho de água aberta. Abra **Opções → Water Surface Controls**.
 2. Na guia **Espuma**, mova **Quantidade de espuma** e solte o controle para aplicar. Em um perfil novo, somente a espuma vem ajustada, com quantidade **40** e independência do vento **100**.
 3. Para experimentar ondas maiores, abra **Ondas → Ondas longas / Swell** e clique em **Preset: ondulação longa**. O preset ajusta as duas bandas, o domínio, o vento e a irregularidade. Os ajustes de espuma, cor e reflexos são preservados.
-4. Para comparar o resultado no mesmo enquadramento, desligue e religue **Geral → Aplicar ajustes (comparação A/B)**. Os valores dos sliders ficam salvos.
+4. Em **Geral**, desligue **Ativar ajustes da água** para restaurar a água do jogo. Ligue novamente para retomar os ajustes escolhidos.
+
+## Salvar e carregar seus presets
+
+1. Ajuste a água como quiser e abra **Geral → Meus presets**.
+2. Em **Espaço do preset**, escolha um dos três espaços. Clique em **Salvar preset** para gravar em um espaço vazio.
+3. Para recuperar os ajustes, escolha o espaço e clique em **Carregar preset**. Selecionar o espaço por si só mantém a configuração atual.
+4. Para atualizar uma cópia já salva, selecione o espaço, clique em **Substituir preset** e confirme. Os outros dois espaços conservam seus presets.
+
+Cada preset guarda os 32 sliders, os interruptores dos grupos e a banda das cáusticas, inclusive os valores de grupos desligados. Os três espaços usam arquivos de texto individuais e podem ser usados em qualquer cidade. Carregar um preset mantém **Ativar ajustes da água** na posição escolhida. Os presets de fábrica também preservam suas cópias pessoais.
+
+### Onde encontrar os arquivos
+
+Em **Geral → Meus presets**, clique em **Abrir pasta de presets**. No Windows, o caminho padrão é:
+
+```text
+%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\ModsSettings\WaterSurfaceControls\Presets
+```
+
+| Espaço | Arquivo |
+| --- | --- |
+| Espaço 1 | `Preset-1.ini` |
+| Espaço 2 | `Preset-2.ini` |
+| Espaço 3 | `Preset-3.ini` |
+
+**Para compartilhar ou fazer backup**, copie o arquivo do espaço desejado. **Para importar**, copie o arquivo recebido para essa pasta, dê a ele o nome de um espaço livre, clique em **Atualizar lista de arquivos** e depois em **Carregar preset**. Se todos estiverem ocupados, faça uma cópia do arquivo que quiser substituir.
+
+Cada arquivo contém os 47 ajustes em texto. Para editar a espuma, por exemplo, troque `Amount=40` por `Amount=80`, salve e carregue o preset. Mantenha o cabeçalho `[WaterSurfaceControls.v1]` e as demais opções. Use ponto nos valores decimais.
+
+**Atualização da 1.5.0.** O mod exporta os presets internos ao iniciar a partir das preferências existentes. Se o espaço já tiver um arquivo diferente, a cópia antiga recebe um nome como `Preset-2-v1.5.0.ini`. Para carregar essa cópia depois, use o procedimento de importação acima. Se a exportação falhar, o mod conserva o preset nas preferências e tenta novamente ao iniciar.
 
 ## Controles por guia
 
@@ -17,7 +52,7 @@ O painel tem **32 sliders em seis guias**, além de seletores, interruptores e p
 
 | Guia | O que você pode ajustar |
 | --- | --- |
-| **Geral** | Ligar os ajustes, comparar com a água original, aplicar presets e registrar diagnóstico. |
+| **Geral** | Ativar ajustes da água, salvar e carregar presets pessoais, aplicar presets de fábrica e registrar diagnóstico. |
 | **Água** | Distância de absorção, distância máxima de refração, cores RGB de transmissão e dispersão, luz ambiente e luz no corpo das ondas. Aumente a distância de absorção para enxergar mais fundo onde o leito está visível. |
 | **Reflexos** | Suavidade próxima e distante, início e comprimento da transição entre elas. Uma suavidade maior concentra o brilho da superfície. |
 | **Ondas** | Força das duas bandas, escala, vento e direção do Swell, multiplicadores nativos de amplitude, vento das ondulações finas e perda de detalhe com a distância da câmera. |
@@ -51,18 +86,17 @@ Em **Ondas → Ondulações finas por distância**, ligue **Ajustar visibilidade
 
 Esse ajuste depende de ripples ativos e funciona independentemente do ajuste de vento. Para mudar o vento dos ripples, ative **Ajustar amplitude das ondas** e **Ajustar vento das ondulações finas (experimental)**. O multiplicador de agitação fina usa o vento original como base.
 
-A cobertura das cristas brancas é controlada em **Espuma**. **Independência do vento** em **0** preserva a resposta nativa ao vento. Em **100**, remove a atenuação dessa curva. A persistência temporal da espuma ficou oculta na 1.4.1 porque seu efeito visual não foi confirmado. Esperar a simulação avançar, com a câmera parada, não testa o fade por distância.
+A cobertura das cristas brancas é controlada em **Espuma**. **Independência do vento** em **0** preserva a resposta nativa ao vento. Em **100**, remove a atenuação dessa curva. A persistência temporal da espuma continua oculta porque seu efeito visual não foi confirmado. Esperar a simulação avançar, com a câmera parada, não testa o fade por distância.
 
 ### Cáusticas
 
 Ligue **Ajustar cáusticas** e **Cáusticas ligadas**. Em uma superfície oceânica, **Banda das cáusticas** permite escolher **Longa**, **Secundária** ou **Ripples** para formar o padrão de luz. A opção **Jogo** devolve a escolha à superfície. Se a banda selecionada estiver inativa, o mod libera esse ajuste.
 
-## Presets e restauração
+## Presets de fábrica e valores do jogo
 
-- **Aplicar ajustes (comparação A/B)** alterna entre os grupos escolhidos e os valores que o mod encontrou ao ativá-los. Use esse interruptor para comparar sem perder o perfil.
 - **Usar valores do jogo** desativa os grupos e mantém os valores dos sliders para uso posterior.
 - **Somente espuma (padrão)** redefine os sliders e ativa apenas o ajuste de espuma.
-- **Preset inicial equilibrado** também redefine os sliders. Ativa óptica, cores, suavidade, amplitudes nativas e aparência da espuma, com quantidade e independência do vento em **30**.
+- **Preset inicial equilibrado** aplica o perfil de água do mod. O Swell usa domínio de 1.250 m, vento de 61 km/h, força de 153% na banda longa e de 59% na secundária. A quantidade de espuma fica em 40, a independência do vento em 100 e a intensidade das cáusticas em 82, usando a banda secundária. A direção do Swell segue o jogo.
 - **Preset: ondulação longa** aplica os cinco valores de Swell da tabela relativos ao domínio, vento, duas bandas e irregularidade. **Retomar Swell salvo** é a opção para voltar aos valores que você personalizou.
 
 ## Compilar e atualizar no Windows
@@ -71,11 +105,11 @@ Ligue **Ajustar cáusticas** e **Cáusticas ligadas**. Em uma superfície oceân
 2. Selecione **Release** e execute **Build → Rebuild Solution**. O ponto de entrada fica em `WaterSurfaceControls/Mod.cs` e os demais arquivos de execução, configurações e idioma ficam em `WaterSurfaceControls/src/`. A solução inclui a referência a `Colossal.Localization`.
 3. Na instalação padrão, a compilação local implanta a DLL em `%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Mods\WaterSurfaceControls\WaterSurfaceControls.dll`. Abra o jogo e confira **Opções → Water Surface Controls**.
 
-Se você usava o **Simple Water Foam**, mova a instalação local antiga de `Mods\SimpleWaterFoam` para fora de `Mods` antes de iniciar a nova. Mantenha as preferências em `ModsSettings/SimpleWaterFoam/FoamSettings`. O nome antigo nesse caminho é intencional e permite reaproveitar os valores de espuma, Swell e dos demais grupos.
+Os ajustes ativos do Water Surface Controls continuam no caminho de configurações `ModsSettings/WaterSurfaceControls/FoamSettings`. A atualização de uma instalação que já usa esse caminho mantém os ajustes. Se você usou uma versão com outro nome de projeto, confira seus valores ao abrir o painel pela primeira vez.
 
 ## Diagnóstico
 
-O carregamento desta versão aparece como `WaterSurfaceControls 1.4.1 loaded` no log do mod.
+O carregamento desta versão aparece como `WaterSurfaceControls 1.5.1 loaded` no log do mod.
 
 ```text
 %USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Logs\WaterSurfaceControls.log
@@ -95,7 +129,7 @@ Um valor diferente no log confirma a alteração do parâmetro. Para avaliar o e
 
 ## Validação e referências
 
-A versão 1.4.1 passou em **100 verificações automatizadas** com tipos substitutos de Unity e CS2, além de um teste de pausa e retomada. A suíte cobre, entre outros pontos, limites dos controles, troca de bandas, restauração dos valores e localização da interface. A aparência e o desempenho no jogo precisam ser avaliados em uma cidade carregada.
+Os testes automatizados cobrem os controles de água, pausa e retomada e o ciclo de gravação, leitura e substituição dos presets em disco. A migração usou presets gerados pelo código da 1.5.0. As APIs do jogo e da Unity foram simuladas. O painel e a abertura da pasta pelo jogo ainda precisam de validação no Windows.
 
 A implementação usa o HDRP como referência para interpretar os campos da água. O material fornecido pelo CS2 determina o resultado renderizado. [Propriedades da água no HDRP 14](https://docs.unity.cn/Packages/com.unity.render-pipelines.high-definition@14.0/manual/WaterSystem-Properties.html) · [WaterSurface.cs](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/WaterSurface.cs) · [Sistema de água](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.cs) · [Atualização da simulação](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.Simulation.cs)
 

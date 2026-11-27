@@ -2,16 +2,49 @@
 
 Tune whitecap coverage, layer medium waves over a long swell, and adjust how water reflects and scatters light in **Cities: Skylines II**. The mod uses the game's native water surface. Its settings are visual and apply across the cities you load.
 
-**Mod version** 1.4.1 · **Target game version** 1.6.4f1 · **Languages** English and Brazilian Portuguese
+**Mod version** 1.5.1 · **Target game version** 1.6.4f1 · **Languages** English and Brazilian Portuguese
 
 [Leia em português](LEIA-ME.md)
+
+## Install from Paradox Mods
+
+Search for **Water Surface Controls** in Paradox Mods, add it to your active playset, and restart the game. Load a city and open **Options → Water Surface Controls**.
 
 ## Getting started
 
 1. Load a city, point the camera across a stretch of open water, and open **Options → Water Surface Controls**.
 2. Open **Foam**, move **Foam amount**, and release the slider to apply the change. A new profile adjusts only foam, with **Foam amount** at **40** and **Wind independence** at **100**.
 3. To try larger waves, open **Waves → Ocean swell** and select **Preset: long swell**. It sets the strength of both wave bands, the patch size, the wind speed, and the irregularity. Your foam, color, and reflection settings carry over.
-4. To compare the same view with the game's water, switch **General → Apply adjustments (A/B comparison)** off and back on. Your slider values are saved.
+4. In **General**, turn off **Enable water adjustments** to restore the game’s water. Turn it on again to resume your settings.
+
+## Save and load your presets
+
+1. Adjust the water, then open **General → My presets**.
+2. Under **Preset slot**, choose one of the three slots. Select **Save preset** to save into an empty slot.
+3. To restore a look, select its slot and choose **Load preset**. Selecting the slot alone keeps your current settings.
+4. To update an existing preset, select its slot, choose **Replace preset**, and confirm. The other two slots keep their presets.
+
+Each preset stores all 32 sliders, group switches, and the caustics source band, including values for groups you have turned off. Each slot uses a separate text file that you can use in any city. Loading a preset keeps **Enable water adjustments** in its current position. Applying a built-in preset also preserves your saved copies.
+
+### Where to find the files
+
+Open **General → My presets → Open presets folder**. The default Windows path is:
+
+```text
+%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\ModsSettings\WaterSurfaceControls\Presets
+```
+
+| Slot | File |
+| --- | --- |
+| Slot 1 | `Preset-1.ini` |
+| Slot 2 | `Preset-2.ini` |
+| Slot 3 | `Preset-3.ini` |
+
+**To share or back up a preset**, copy its file. **To import one**, copy it into this folder, give it the filename of an empty slot, choose **Refresh preset files**, then **Load preset**. If all slots are occupied, back up the file you intend to replace.
+
+Each file holds all 47 settings as plain text. To edit foam coverage, for example, change `Amount=40` to `Amount=80`, save the file, then load the preset. Keep the `[WaterSurfaceControls.v1]` header and the other entries. Use a decimal point for fractional values.
+
+**Upgrading from 1.5.0.** On startup, the mod exports the presets embedded in your existing preferences. If a slot already contains a different file, the old copy gets a name such as `Preset-2-v1.5.0.ini`. To load that copy later, follow the import steps above. If export fails, the mod keeps the embedded preset and retries at next startup.
 
 ## Controls by tab
 
@@ -19,7 +52,7 @@ The panel has **32 sliders across six tabs**, plus toggles, selectors, and prese
 
 | Tab | What you can adjust |
 | --- | --- |
-| **General** | Enable adjustments, compare them with the original water, apply presets, and write diagnostics to the log. |
+| **General** | Enable water adjustments, save and load personal presets, apply built-in presets, and write diagnostics to the log. |
 | **Water** | Absorption distance, maximum refraction distance, transmission and scattering colors (RGB), ambient scattering, and wave-body lighting. Increase absorption distance to see farther through the water where the bottom is visible. |
 | **Reflections** | Surface smoothness near and far from the camera, plus the start and length of the transition between them. Higher smoothness produces sharper highlights. |
 | **Waves** | Swell band strengths, patch size, wind, irregularity, direction, native amplitude multipliers, ripple wind, and the distance at which fine ripples fade. |
@@ -53,31 +86,30 @@ Under **Waves → Fine ripples by distance**, enable **Override ripple visibilit
 
 Distance fading requires active ripples and works independently of ripple wind. To change the wind that generates ripples, enable both **Override wave amplitude** and **Override ripple wind (experimental)**. The ripple wind multiplier scales the surface's original wind speed.
 
-Use **Foam** to adjust whitecap coverage. **Wind independence** at **0** preserves the surface's native response to wind. At **100**, it removes the reduction in foam caused by that wind response. Version 1.4.1 hides the foam persistence control because its effect on foam lifetime could not be confirmed. To test ripple fading, change the viewing distance or fade settings. Elapsed simulation time alone does not test it.
+Use **Foam** to adjust whitecap coverage. **Wind independence** at **0** preserves the surface's native response to wind. At **100**, it removes the reduction in foam caused by that wind response. The foam persistence control stays hidden because its effect on foam lifetime could not be confirmed. To test ripple fading, change the viewing distance or fade settings. Elapsed simulation time alone does not test it.
 
 ### Caustics
 
 Turn on **Override caustics** and **Enable caustics**. On an ocean surface, **Source band** lets you choose **Long**, **Secondary**, or **Ripples** to generate the light pattern on the bottom. Select **Game** to restore the surface's original choice. The mod releases the override if the selected band is inactive.
 
-## Presets and restoring game values
+## Built-in presets and game values
 
-- **Apply adjustments (A/B comparison)** switches between your active adjustments and the values the mod captured when those groups were enabled. Use it to compare the same view while keeping your profile.
 - **Use game values** turns off all override groups and keeps your slider values for later.
 - **Foam only (default)** resets the sliders and enables only the foam override.
-- **Balanced starting preset** also resets the sliders. It enables water optics, colors, smoothness, native wave amplitudes, and foam appearance, with foam amount and wind independence both set to **30**.
+- **Balanced starting preset** applies the built-in water profile. The swell uses a 1,250 m patch, 61 km/h wind, long-band strength of 153%, and secondary-band strength of 59%. Foam amount is 40, wind independence is 100, and caustics intensity is 82 using the secondary band. Swell follows the game’s wind direction.
 - **Preset: long swell** applies the five values listed above for patch size, wind speed, the two band strengths, and irregularity. Choose **Resume saved swell** to return to your own settings.
 
 ## Building and upgrading on Windows
 
 1. With the official modding toolchain installed, close the game and open **WaterSurfaceControls.sln** in Visual Studio.
 2. Select **Release**, then **Build → Rebuild Solution**. The entry point is `WaterSurfaceControls/Mod.cs`. The runtime, settings, and localization files are in `WaterSurfaceControls/src/`. The project includes the `Colossal.Localization` reference.
-3. With the default installation, the build deploys the DLL to `%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Mods\WaterSurfaceControls\WaterSurfaceControls.dll`. Start the game and open **Options → Water Surface Controls Plus**.
+3. With the default installation, the build deploys the DLL to `%USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Mods\WaterSurfaceControls\WaterSurfaceControls.dll`. Start the game and open **Options → Water Surface Controls**.
 
-If you previously used **Simple Water Foam**, move its old local installation from `Mods\SimpleWaterFoam` to a folder outside `Mods` before starting the new version. Keep your preferences at `ModsSettings/SimpleWaterFoam/FoamSettings`. Water Surface Controls Plus still reads that path so you can reuse your foam, swell, and other settings.
+Water Surface Controls still stores its active settings at `ModsSettings/WaterSurfaceControls/FoamSettings`. Upgrading an installation that already uses this path retains your settings. If you used a build with a different project name, check your values when you first open the panel.
 
 ## Diagnostics
 
-A successful startup writes `WaterSurfaceControls 1.4.1 loaded` to the mod log.
+A successful startup writes `WaterSurfaceControls 1.5.1 loaded` to the mod log.
 
 ```text
 %USERPROFILE%\AppData\LocalLow\Colossal Order\Cities Skylines II\Logs\WaterSurfaceControls.log
@@ -97,8 +129,8 @@ A changed log value confirms that the parameter changed. To judge the visual eff
 
 ## Validation and references
 
-Version 1.4.1 passed **100 automated checks** using test doubles for Unity and Cities: Skylines II, plus a separate pause-and-resume test. The suite covers slider limits, switching wave bands, restoring values, and UI localization. Visual results and in-game performance require testing in a loaded city.
+Automated tests covered the water controls, pause and resume, and saving, reading and replacing real files. Migration tests used presets produced by the 1.5.0 code. Tests used stand-ins for game and Unity APIs. The options panel and opening the folder from the game still need verification on Windows.
 
 The implementation uses Unity HDRP as a reference for interpreting water fields. Cities: Skylines II supplies the material that renders the surface. [HDRP 14 water properties](https://docs.unity.cn/Packages/com.unity.render-pipelines.high-definition@14.0/manual/WaterSystem-Properties.html) · [WaterSurface.cs](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/WaterSurface.cs) · [Water system](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.cs) · [Simulation update](https://github.com/Unity-Technologies/Graphics/blob/2022.3/staging/Packages/com.unity.render-pipelines.high-definition/Runtime/Water/HDRenderPipeline.WaterSystem.Simulation.cs)
 
-These projects provided examples of water controls and settings interfaces during development. Water Surface Controls Plus runs independently of them. [WaterVisualTweaks](https://github.com/HX2003/WaterVisualTweaks) · [TrafficToolEssentials](https://github.com/ZessonsDE/TrafficToolEssentials/blob/main/TrafficToolEssentials/Settings.cs) · [AreaBucket](https://github.com/Cmyna/AreaBucket/blob/master/Setting.cs) · [CS2MultiplayerMod](https://github.com/Rollocraft/CS2MultiplayerMod/blob/master/CS2MultiplayerMod/Setting.cs)
+These projects provided examples of water controls and settings interfaces during development. Water Surface Controls runs independently of them. [WaterVisualTweaks](https://github.com/HX2003/WaterVisualTweaks) · [TrafficToolEssentials](https://github.com/ZessonsDE/TrafficToolEssentials/blob/main/TrafficToolEssentials/Settings.cs) · [AreaBucket](https://github.com/Cmyna/AreaBucket/blob/master/Setting.cs) · [CS2MultiplayerMod](https://github.com/Rollocraft/CS2MultiplayerMod/blob/master/CS2MultiplayerMod/Setting.cs)
